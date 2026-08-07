@@ -1,0 +1,4 @@
+interface:
+  display_name: "Yandex Tracker Issue Creator"
+  short_description: "Create Yandex Tracker issues safely"
+  default_prompt: "Use $yandex-tracker-issue-creator to create a Tracker issue with project, tags, period, SP, and assignee."

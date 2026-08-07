@@ -1,0 +1,26 @@
+{
+  "protected_branches": ["master", "main", "dev"],
+  "projects": [
+    {
+      "key": "example-app",
+      "type": "multi_repo",
+      "workspace": "/absolute/path/to/example-app",
+      "repositories": [
+        {
+          "label": "backend",
+          "path": "/absolute/path/to/example-app/backend",
+          "remote": "origin",
+          "base_branch": "master",
+          "dev_branch": "dev"
+        },
+        {
+          "label": "frontend",
+          "path": "/absolute/path/to/example-app/frontend",
+          "remote": "origin",
+          "base_branch": "master",
+          "dev_branch": "dev"
+        }
+      ]
+    }
+  ]
+}

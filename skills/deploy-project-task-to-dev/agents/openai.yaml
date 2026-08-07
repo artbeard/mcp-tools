@@ -1,0 +1,7 @@
+interface:
+  display_name: "Deploy Project Task to Dev"
+  short_description: "Merge task branches into dev with conflict handling"
+  default_prompt: "Use $deploy-project-task-to-dev to merge my task branches into dev and publish origin/dev."
+
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Prepare Project Task"
+  short_description: "Prepare local task branches without Git push"
+  default_prompt: "Use $prepare-project-task to safely prepare local task branches for my project without pushing them."
+
+policy:
+  allow_implicit_invocation: false

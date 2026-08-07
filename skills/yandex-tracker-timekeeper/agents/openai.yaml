@@ -1,0 +1,7 @@
+interface:
+  display_name: "Yandex Tracker Timekeeper"
+  short_description: "Track Tracker issue work time"
+  default_prompt: "Use $yandex-tracker-timekeeper to track and write local work time for a Tracker issue."
+
+policy:
+  allow_implicit_invocation: true

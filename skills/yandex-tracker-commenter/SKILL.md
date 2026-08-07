@@ -1,0 +1,120 @@
+---
+name: yandex-tracker-commenter
+description: Подготовка и публикация комментариев, а также выполнение workflow-transition в задачах Yandex Tracker через локальный API-клиент. Используй, когда пользователь просит создать, написать, подготовить, отправить или опубликовать комментарий в Tracker, призвать исполнителя либо перевести задачу в другой статус. Чтение, скачивание и обязательный dry-run выполняй без подтверждения; запрашивай явное подтверждение exact issue key и финального комментария или выбранного transition только перед реальной записывающей операцией.
+---
+# Yandex Tracker Commenter
+
+Используй этот skill для write-действий в Yandex Tracker : комментарии к задачам и workflow-transition статуса.
+
+## Обязательные Источники
+
+Перед отправкой прочитай `references/safety.md`.
+
+Для публикации комментариев используй только `scripts/post_tracker_comment.py`.
+Для перевода статуса используй только `scripts/transition_tracker_issue.py`.
+
+## Конфигурация
+
+Ожидаемый env-файл:
+
+```text
+config/tracker.env
+```
+
+Минимальные переменные:
+
+```bash
+TRACKER_BASE_URL=https://api.tracker.yandex.net
+TRACKER_ORG_ID=
+TRACKER_OAUTH_TOKEN=
+```
+
+Альтернативно вместо `TRACKER_ORG_ID` можно задать `TRACKER_CLOUD_ORG_ID`.
+
+Если у пользователя есть только OAuth app `ClientID` и `Client secret`, не проси секрет в чат. Попроси локально получить OAuth token и заполнить `TRACKER_OAUTH_TOKEN` в env-файле. Этот skill не хранит client secret и не выполняет OAuth browser-flow.
+
+## Workflow
+
+1. Считай просьбу `создай/напиши/подготовь комментарий` указанием самостоятельно изучить доступный контекст задачи, написать готовый комментарий и довести его до успешного dry-run. Это не является разрешением на реальную публикацию.
+2. Без подтверждения прочитай задачу, комментарии, метаданные и при необходимости скачай доступные вложения. Любые операции, гарантированно не меняющие Tracker, выполняй сразу.
+3. Подготовь полный финальный текст комментария.
+4. Если нужен призыв без `@` в тексте, используй `--summonee`. Форматы: `login:example.user`, `id:<tracker-user-id>`, `cloud:<cloudUid>`, `uid:<uid>`, `passport:<passportUid>`, `tracker:<trackerUid>`. Plain non-numeric значение трактуется как login, plain digits — как id.
+5. Если нужен ответ на существующий комментарий, используй `--reply-to-comment <COMMENT_ID_OR_LONG_ID>`. Можно передать обычный numeric comment id: скрипт сам получит Tracker `longId`.
+6. Без подтверждения выполни dry-run:
+
+```bash
+python3 skills/yandex-tracker-commenter/scripts/post_tracker_comment.py \
+  --issue-key "<ISSUE_KEY>" \
+  --body-file "<BODY_FILE>"
+```
+
+Для призыва и ответа добавь соответствующие аргументы:
+
+```bash
+python3 skills/yandex-tracker-commenter/scripts/post_tracker_comment.py \
+  --issue-key "<ISSUE_KEY>" \
+  --body-file "<BODY_FILE>" \
+  --summonee "login:example.user" \
+  --reply-to-comment "35935"
+```
+
+7. После успешного dry-run покажи пользователю exact issue key, полный final body, source authorization как `Tracker token из `config/tracker.env``, а также exact `summonees` и `reply-to-comment`, если они используются.
+8. Запроси одно явное подтверждение именно на реальную публикацию показанного текста в показанную задачу с показанными `summonees` и/или `reply-to-comment`.
+9. Только после подтверждения выполни реальную отправку:
+
+```bash
+python3 skills/yandex-tracker-commenter/scripts/post_tracker_comment.py \
+  --issue-key "<ISSUE_KEY>" \
+  --body-file "<BODY_FILE>" \
+  --send \
+  --confirm-send
+```
+
+10. Верни пользователю ID/URL созданного комментария или точную ошибку Tracker API.
+
+## Workflow: Transition Статуса
+
+1. Определи exact issue key и целевой статус словами пользователя (`Открыт`, `В работе`, `Можно тестировать`, и т.п.).
+2. Без подтверждения прочитай текущий статус задачи и список доступных из него transition'ов. Повторяй это чтение для каждого нового исходного статуса; не полагайся на ранее увиденный список.
+3. Без подтверждения выполни dry-run, чтобы сопоставить целевой статус с доступным transition:
+
+```bash
+python3 skills/yandex-tracker-commenter/scripts/transition_tracker_issue.py \
+  --issue-key "<ISSUE_KEY>" \
+  --target "<TARGET_STATUS>"
+```
+
+4. После успешного dry-run покажи пользователю exact issue key, текущий статус, target, выбранный `transition.id`, `transition.display`, `transition.to.display`, source authorization как `Tracker token из `config/tracker.env``.
+5. Запроси одно явное подтверждение на реальный перевод этой задачи именно выбранным transition. Если целевой статус требует цепочки переходов, это подтверждение разрешает всю цепочку к неизменному exact issue key и конечному target: после каждого шага заново прочитай статус и сделай dry-run следующего перехода, покажи его пользователю и продолжай без повторного подтверждения. Запроси новое подтверждение только если меняется задача, конечный target или маршрут больше не ведёт однозначно к нему.
+6. После подтверждения выполни реальный transition:
+
+```bash
+python3 skills/yandex-tracker-commenter/scripts/transition_tracker_issue.py \
+  --issue-key "<ISSUE_KEY>" \
+  --target "<TARGET_STATUS>" \
+  --send \
+  --confirm-send
+```
+
+7. Верни пользователю новый статус или точную ошибку Tracker API.
+
+## Граница Подтверждения
+
+- Не запрашивай подтверждение для GET/HEAD, поиска, чтения задачи и комментариев, получения доступных transition'ов, скачивания вложений и других read-only операций.
+- Не запрашивай подтверждение для запуска команд без `--send`: это dry-run, который не меняет Tracker.
+- Не объединяй dry-run и реальную отправку в один запрос подтверждения или один запуск команды.
+- Запрашивай подтверждение только после успешного dry-run и только непосредственно перед командой с `--send`.
+- Одного подтверждения достаточно для одной показанной записывающей операции. Не проси повторное подтверждение перед тем же неизменённым запуском.
+- Для однозначной цепочки workflow к уже подтверждённому конечному статусу одного подтверждения достаточно на всю цепочку; каждый следующий transition всё равно требует свежего чтения и dry-run.
+- Не запрашивай у пользователя системное разрешение на запуск скриптов. Используй команды, начинающиеся с уже одобренного префикса `python3 .../scripts/<script>.py`; не оборачивай их в `/usr/bin/env` и не используй inline environment assignment.
+
+## Запреты
+
+- Не отправляй комментарий без свежего явного подтверждения пользователя.
+- Не отправляй комментарий, если итоговый body отличается от подтверждённого.
+- Не отправляй комментарий, если `summonees` или `reply-to-comment` отличаются от подтверждённых.
+- Не проси и не печатай `TRACKER_OAUTH_TOKEN`, `Client secret`, cookies или другие секреты.
+- Не сохраняй токены/секреты в skill, репозиторий или временный body-файл.
+- Не меняй assignee, labels, links, sprint, checklist или поля задачи.
+- Не меняй статус без dry-run выбранного transition и явного подтверждения пользователя либо действующего подтверждения однозначной цепочки к тому же конечному статусу.
+- Не используй `--send`, если dry-run не прошёл.

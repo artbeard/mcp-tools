@@ -1,0 +1,4 @@
+interface:
+  display_name: "Yandex Tracker Commenter"
+  short_description: "Comments and status transitions in Tracker"
+  default_prompt: "Используй $yandex-tracker-commenter: без подтверждения прочитай контекст и выполни dry-run, затем покажи готовую операцию и запроси подтверждение только перед реальной публикацией комментария или transition статуса."

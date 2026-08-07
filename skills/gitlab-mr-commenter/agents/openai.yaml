@@ -1,0 +1,4 @@
+interface:
+  display_name: "GitLab MR Commenter"
+  short_description: "Publish comments on GitLab merge requests"
+  default_prompt: "Используй $gitlab-mr-commenter, чтобы подготовить и после подтверждения отправить комментарий в GitLab merge request."

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Prepare Project Merge Requests"
+  short_description: "Publish task branches and create GitLab MRs"
+  default_prompt: "Use $prepare-project-merge-requests to publish my task branches and create merge requests."
+
+policy:
+  allow_implicit_invocation: false

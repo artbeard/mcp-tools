@@ -1,0 +1,7 @@
+interface:
+  display_name: "Start Project Sandbox"
+  short_description: "Manage sandboxes with verified readiness checks"
+  default_prompt: "Use $start-project-sandbox to start, inspect, diagnose, or stop my project sandbox with verified results."
+
+policy:
+  allow_implicit_invocation: false
