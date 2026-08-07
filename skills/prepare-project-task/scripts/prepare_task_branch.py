@@ -280,35 +280,32 @@ def main() -> int:
 	action.add_argument('--prepare', metavar='TASK_ID')
 	parser.add_argument('--project')
 	parser.add_argument('--cwd', default=os.getcwd())
+	parser.add_argument('--manifest', type=Path)
 	args = parser.parse_args()
 	root = Path(__file__).resolve().parents[3]
 	if str(root) not in sys.path:
 		sys.path.insert(0, str(root))
-	from mcp_paths import PROJECTS_PREPARE
-	config_path = Path(os.environ.get('PREPARE_PROJECT_CONFIG', PROJECTS_PREPARE))
+	from workspace_manifest import (
+		ManifestError,
+		as_prepare_project,
+		assert_project_name,
+		discover_manifest,
+		list_payload,
+	)
 
 	try:
-		projects, protected = load_config(config_path)
+		manifest = discover_manifest(cwd=Path(args.cwd), manifest=args.manifest)
+		assert_project_name(manifest, args.project)
 		if args.list:
-			return emit({
-				'status': 'ok',
-				'action': 'list',
-				'projects': [
-					{
-						'key': item['key'],
-						'type': item['type'],
-						'workspace': item['workspace'],
-						'repositories': len(item['repositories']),
-					}
-					for item in projects
-				],
-				'push_allowed': False,
-			}, 0)
-		project = select_project(projects, args.project, Path(args.cwd))
+			payload = list_payload(manifest)
+			payload['push_allowed'] = False
+			return emit(payload, 0)
+		project = as_prepare_project(manifest)
+		protected = set(manifest['git']['protected_base_branches'])
 		task_id = args.check or args.prepare
 		assert task_id is not None
 		task_errors = validate_task(task_id, protected, project)
-	except (OSError, ValueError, json.JSONDecodeError, SafetyError) as error:
+	except (OSError, ValueError, json.JSONDecodeError, SafetyError, ManifestError) as error:
 		return emit({'status': 'failed', 'errors': [str(error)], 'push_allowed': False}, 2)
 
 	if task_errors:

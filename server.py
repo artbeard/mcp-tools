@@ -88,27 +88,27 @@ def ping() -> str:
 @mcp.tool(
     description=(
         "Manage project sandboxes (list/check/status/start/stop/diagnose) via "
-        "skills/start-project-sandbox. Use when the user asks to start, stop, inspect, "
-        "or diagnose a configured project sandbox."
+        "skills/start-project-sandbox. Discovers .workspace.yaml from cwd (walk-up). "
+        "project is optional and must match manifest name/aliases when set."
     )
 )
 def start_project_sandbox(
     action: str,
     project: str | None = None,
     cwd: str | None = None,
+    manifest: str | None = None,
 ) -> str:
-    """action: list | check | status | start | stop | diagnose. project required except for list."""
+    """action: list | check | status | start | stop | diagnose."""
     script = SKILLS / "start-project-sandbox" / "scripts" / "start_sandbox.py"
     action = action.strip().lower()
     allowed = {"list", "check", "status", "start", "stop", "diagnose"}
     if action not in allowed:
         return f"ERROR: action must be one of {sorted(allowed)}"
-    if action == "list":
-        args = ["--list"]
-    else:
-        if not project:
-            return "ERROR: project is required unless action=list"
-        args = [f"--{action}", project]
+    args: list[str] = [f"--{action}"]
+    if action != "list" and project:
+        args.append(project)
+    args.extend(_opt("--cwd", cwd))
+    args.extend(_opt("--manifest", manifest))
     return _run(script, args, cwd=cwd)
 
 
@@ -117,8 +117,8 @@ def start_project_sandbox(
 
 @mcp.tool(
     description=(
-        "Prepare local task branches across configured multi-repo projects. "
-        "Never pushes. Modes: list, check, prepare."
+        "Prepare local task branches across repos described by .workspace.yaml. "
+        "Never pushes. Modes: list, check, prepare. Discovers manifest from cwd."
     )
 )
 def prepare_project_task(
@@ -126,6 +126,7 @@ def prepare_project_task(
     task_id: str | None = None,
     project: str | None = None,
     cwd: str | None = None,
+    manifest: str | None = None,
 ) -> str:
     script = SKILLS / "prepare-project-task" / "scripts" / "prepare_task_branch.py"
     mode = mode.strip().lower()
@@ -140,6 +141,7 @@ def prepare_project_task(
         return "ERROR: mode must be list|check|prepare"
     args.extend(_opt("--project", project))
     args.extend(_opt("--cwd", cwd))
+    args.extend(_opt("--manifest", manifest))
     return _run(script, args, cwd=cwd)
 
 
@@ -148,7 +150,7 @@ def prepare_project_task(
 
 @mcp.tool(
     description=(
-        "Publish local task branches and create/reuse GitLab MRs across configured repos. "
+        "Publish local task branches and create/reuse GitLab MRs using .workspace.yaml. "
         "Modes: list, check, create."
     )
 )
@@ -157,6 +159,7 @@ def prepare_project_merge_requests(
     task_id: str | None = None,
     project: str | None = None,
     cwd: str | None = None,
+    manifest: str | None = None,
     title: str | None = None,
     description: str | None = None,
 ) -> str:
@@ -175,6 +178,7 @@ def prepare_project_merge_requests(
             return "ERROR: mode must be list|check|create"
         args.extend(_opt("--project", project))
         args.extend(_opt("--cwd", cwd))
+        args.extend(_opt("--manifest", manifest))
         args.extend(_opt("--title", title))
         if description is not None:
             desc_path = _write_temp(description, suffix=".md")
@@ -190,7 +194,7 @@ def prepare_project_merge_requests(
 
 @mcp.tool(
     description=(
-        "Merge remote task branches into origin/dev across configured repos and push only origin/dev. "
+        "Merge remote task branches into origin/dev using .workspace.yaml and push only origin/dev. "
         "Modes: list, check, deploy, continue."
     )
 )
@@ -199,6 +203,7 @@ def deploy_project_task_to_dev(
     task_id: str | None = None,
     project: str | None = None,
     cwd: str | None = None,
+    manifest: str | None = None,
 ) -> str:
     script = SKILLS / "deploy-project-task-to-dev" / "scripts" / "deploy_task_to_dev.py"
     mode = mode.strip().lower()
@@ -217,6 +222,7 @@ def deploy_project_task_to_dev(
         return "ERROR: mode must be list|check|deploy|continue"
     args.extend(_opt("--project", project))
     args.extend(_opt("--cwd", cwd))
+    args.extend(_opt("--manifest", manifest))
     return _run(script, args, cwd=cwd)
 
 

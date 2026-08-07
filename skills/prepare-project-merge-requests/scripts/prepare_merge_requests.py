@@ -295,30 +295,38 @@ def main() -> int:
 	action.add_argument('--create', metavar='TASK_ID')
 	parser.add_argument('--project')
 	parser.add_argument('--cwd', default=os.getcwd())
+	parser.add_argument('--manifest', type=Path)
 	parser.add_argument('--title')
 	parser.add_argument('--description-file', type=Path)
 	args = parser.parse_args()
 	root = Path(__file__).resolve().parents[3]
 	if str(root) not in sys.path:
 		sys.path.insert(0, str(root))
-	from mcp_paths import PROJECTS_MR, GITLAB_ENV, resolve_config_path
-	config_path = Path(os.environ.get('PROJECT_MR_CONFIG', PROJECTS_MR))
+	from mcp_paths import GITLAB_ENV
+	from workspace_manifest import (
+		ManifestError,
+		as_mr_project,
+		assert_project_name,
+		discover_manifest,
+		list_payload,
+	)
 	try:
-		config, projects, protected = load_config(config_path)
+		manifest = discover_manifest(cwd=Path(args.cwd), manifest=args.manifest)
+		assert_project_name(manifest, args.project)
 		if args.list:
-			return emit({'status': 'ok', 'action': 'list', 'projects': [{'key': item['key'], 'type': item['type'], 'repositories': len(item['repositories'])} for item in projects]}, 0)
-		project = select_project(projects, args.project, Path(args.cwd))
+			return emit(list_payload(manifest), 0)
+		project = as_mr_project(manifest)
+		protected = set(manifest['git']['protected_branches'])
 		task_id = args.check or args.create
 		assert task_id
-		env_file = resolve_config_path(config.get('gitlab_env_file') or GITLAB_ENV)
-		env = load_env(env_file)
+		env = load_env(GITLAB_ENV)
 		token = env.get('GITLAB_TOKEN', '')
 		base_url = env.get('GITLAB_BASE_URL', '')
 		if not token or not base_url:
-			raise ValueError('GITLAB_TOKEN and GITLAB_BASE_URL must be set in the configured env file')
+			raise ValueError(f'GITLAB_TOKEN and GITLAB_BASE_URL must be set in {GITLAB_ENV}')
 		description = args.description_file.read_text(encoding='utf-8') if args.description_file else ''
 		checks = [inspect_repository(item, task_id, args.title, protected, base_url, token) for item in project['repositories']]
-	except (OSError, ValueError, json.JSONDecodeError, RuntimeError, SafetyError, subprocess.TimeoutExpired) as error:
+	except (OSError, ValueError, json.JSONDecodeError, RuntimeError, SafetyError, subprocess.TimeoutExpired, ManifestError) as error:
 		return emit({'status': 'failed', 'errors': [str(error)]}, 2)
 	errors = [f"{item['label']}: {error}" for item in checks for error in item['errors']]
 	if errors or args.check:

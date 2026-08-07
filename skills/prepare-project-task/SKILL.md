@@ -15,7 +15,7 @@ Prepare local task branches with `scripts/prepare_task_branch.py`.
 4. If the check succeeds, run `python3 scripts/prepare_task_branch.py --prepare <task-id> [--project <key>]`.
 5. Report the selected project type and resulting local branch in every repository.
 
-Use `--list` to inspect configured projects. Read ``config/projects-*.json` (see config/README.md)` only when project membership, type, paths, remotes, or base branches need inspection or updating.
+Use `--list` to inspect configured projects. Read ``.workspace.yaml`` only when project membership, type, paths, remotes, or base branches need inspection or updating.
 
 The prepare command repeats the complete preflight, inspects remote branches, fetches only configured base refs, verifies fast-forward compatibility across every repository, updates configured local base branches with `merge --ff-only`, and creates the task branch locally.
 

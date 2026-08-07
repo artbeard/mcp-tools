@@ -1,6 +1,3 @@
-Deploy layout config lives in the repo `config/` directory:
+Layout is defined by `.workspace.yaml` in the project workspace (discovered by walking up from cwd).
 
-- example: `config/projects-deploy.example.json`
-- local (gitignored): `config/projects-deploy.json`
-
-Override with env `PROJECT_DEV_CONFIG`.
+See `config/workspace.example.yaml` and `config/README.md` in the mcp-tools repo.

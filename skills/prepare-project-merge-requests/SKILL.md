@@ -47,4 +47,4 @@ The script reads the GitLab token only from the configured local env file. Never
 - Validate every GitLab `iid` and `web_url` against the expected project and MR path. Never report success if a created or existing MR lacks a validated URL.
 - Return all validated links in the top-level `mr_urls` array; exclude `no_changes` repositories from that array.
 - Stop on failure and report the phase and exact partial state; never claim project-wide success for a partial result.
-- Read ``config/projects-*.json` (see config/README.md)` only when project membership, paths, remotes, targets, or GitLab settings need inspection.
+- Read ``.workspace.yaml`` only when project membership, paths, remotes, targets, or GitLab settings need inspection.

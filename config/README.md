@@ -1,24 +1,35 @@
 # Local configuration (not committed)
 
-Copy examples and fill secrets / absolute paths:
+## Credentials
 
 ```bash
 cp config/tracker.env.example config/tracker.env
 cp config/gitlab.env.example config/gitlab.env
-cp config/projects-prepare.example.json config/projects-prepare.json
-cp config/projects-mr.example.json config/projects-mr.json
-cp config/projects-deploy.example.json config/projects-deploy.json
-cp config/sandboxes.example.json config/sandboxes.json
 chmod 600 config/tracker.env config/gitlab.env
+# fill tokens
 ```
 
 | File | Used by |
 |------|---------|
-| `tracker.env` | Tracker tools (timekeeper, issue creator, commenter) |
+| `tracker.env` | Tracker tools |
 | `gitlab.env` | GitLab MR commenter + prepare MRs |
-| `projects-prepare.json` | `prepare-project-task` |
-| `projects-mr.json` | `prepare-project-merge-requests` |
-| `projects-deploy.json` | `deploy-project-task-to-dev` |
-| `sandboxes.json` | `start-project-sandbox` |
 
-`gitlab_env_file` in `projects-mr.json` may be `config/gitlab.env` (relative to repo root) or an absolute path.
+## Workspace layout (`.workspace.yaml`)
+
+Project/sandbox layout lives **in each workspace**, not in mcp-tools:
+
+```bash
+cp config/workspace.example.yaml /path/to/your/workspace/.workspace.yaml
+# edit relative paths / sandbox components
+```
+
+Discovery: tools walk up from `--cwd` until they find `.workspace.yaml`.
+
+Migrate from legacy central JSON (if you still have local `config/projects-*.json` + `sandboxes.json`):
+
+```bash
+.venv/bin/python scripts/migrate_central_config_to_workspace.py          # dry-run
+.venv/bin/python scripts/migrate_central_config_to_workspace.py --write   # create files
+```
+
+Legacy `config/projects-*.json` / `sandboxes.json` are gitignored and only used by the migrator.

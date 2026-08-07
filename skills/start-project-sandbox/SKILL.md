@@ -29,7 +29,7 @@ Do not run separate log commands. The script includes bounded diagnostics only f
 
 Use `python3 scripts/start_sandbox.py --list` to list accepted project keys and aliases. Listing and status are read-only operations and require no semantic user confirmation. Configured aggregate projects may reuse atomic components without duplicating their lifecycle definitions.
 
-Read ``config/sandboxes.json` (see config/README.md)` when project composition, aliases, components, paths, commands, probes, or timeouts need inspection or updating. Keep this personal config outside all project repositories.
+Read `.workspace.yaml` (see config/workspace.example.yaml) when project composition, aliases, components, paths, commands, probes, or timeouts need inspection or updating. Keep credentials in mcp-tools `config/*.env`; layout stays in the workspace `.workspace.yaml`.
 
 ## Safety rules
 

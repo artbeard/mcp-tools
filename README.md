@@ -85,27 +85,25 @@ args = ["<REPO>/server.py"]
 ```bash
 cp config/tracker.env.example config/tracker.env
 cp config/gitlab.env.example config/gitlab.env
-cp config/projects-prepare.example.json config/projects-prepare.json
-cp config/projects-mr.example.json config/projects-mr.json
-cp config/projects-deploy.example.json config/projects-deploy.json
-cp config/sandboxes.example.json config/sandboxes.json
 chmod 600 config/tracker.env config/gitlab.env
-# затем заполни токены и абсолютные пути к своим репам
+# заполнить токены
+
+cp config/workspace.example.yaml /path/to/workspace/.workspace.yaml
+# относительные пути к репам + sandbox components
 ```
 
 | Файл | Назначение |
 |------|------------|
 | `config/tracker.env` | Yandex Tracker API |
 | `config/gitlab.env` | GitLab API |
-| `config/projects-*.json` | multi-repo layout для prepare/MR/deploy |
-| `config/sandboxes.json` | sandbox components |
+| `<workspace>/.workspace.yaml` | layout реп + sandbox (discovery от cwd) |
+| `config/workspace.example.yaml` | пример манифеста |
 | `~/.local/state/mcp-tools/tracker-time.json` | локальный timer state (не в git) |
 
 Минимум Tracker: `TRACKER_OAUTH_TOKEN`, `TRACKER_ORG_ID` или `TRACKER_CLOUD_ORG_ID`.  
 Минимум GitLab: `GITLAB_BASE_URL`, `GITLAB_TOKEN`.
 
-Скрипты и MCP читают **только** `config/` (или override через `env_file` / `*_CONFIG` env vars).
----
+Креды — в `config/*.env`. Layout проектов — в `.workspace.yaml` у workspace (см. [config/README.md](config/README.md)).
 
 ## Tools
 
@@ -118,9 +116,9 @@ Health-check сервера.
 Старт/стоп/статус песочницы проекта (`skills/start-project-sandbox`).
 
 - **Зачем:** lifecycle sandbox (docker/tmux/процессы) с readiness.
-- **Параметры:** `action` = `list|check|status|start|stop|diagnose`; `project` (кроме `list`); опционально `cwd`.
-- **Конфиг:** `config/sandboxes.json` (пример: `sandboxes.example.json`; override `SANDBOX_CONFIG_FILE`).
-- **Запуск CLI:** `python skills/start-project-sandbox/scripts/start_sandbox.py --status <project>`
+- **Параметры:** `action` = `list|check|status|start|stop|diagnose`; `project` опционален (name/alias манифеста); `cwd` / `manifest`.
+- **Конфиг:** `.workspace.yaml` (sandbox.components); discovery от `cwd` / `--manifest`.
+- **Запуск CLI:** `python skills/start-project-sandbox/scripts/start_sandbox.py --status --cwd /path/to/workspace`
 
 ### `prepare_project_task`
 
@@ -128,7 +126,7 @@ Health-check сервера.
 
 - **Зачем:** подготовить ветку задачи от `master`/`main`.
 - **Параметры:** `mode` = `list|check|prepare`; `task_id`; опционально `project`, `cwd`.
-- **Конфиг:** `config/projects-prepare.json`
+- **Конфиг:** `.workspace.yaml` (repositories + branches.base)
 - **CLI:** `python .../prepare_task_branch.py --check IT-123`
 
 ### `prepare_project_merge_requests`
@@ -137,7 +135,7 @@ Publish веток + create/reuse GitLab MR.
 
 - **Зачем:** открыть MR по задаче во всех репах.
 - **Параметры:** `mode` = `list|check|create`; `task_id`; опционально `project`, `cwd`, `title`, `description`.
-- **Конфиг:** `config/projects-mr.json` + `config/gitlab.env`
+- **Конфиг:** `.workspace.yaml` + `config/gitlab.env`
 - **CLI:** `python .../prepare_merge_requests.py --check IT-123`
 
 ### `deploy_project_task_to_dev`
@@ -146,7 +144,7 @@ Merge task → `dev` и push только `origin/dev`.
 
 - **Зачем:** выкатить задачу на dev.
 - **Параметры:** `mode` = `list|check|deploy|continue`; `task_id`; опционально `project`, `cwd`.
-- **Конфиг:** `config/projects-deploy.json`
+- **Конфиг:** `.workspace.yaml` (branches.dev)
 - **CLI:** `python .../deploy_task_to_dev.py --check IT-123`
 
 ### `yandex_tracker_timekeeper`

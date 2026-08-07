@@ -1,6 +1,3 @@
-Sandbox layout config lives in the repo `config/` directory:
+Layout is defined by `.workspace.yaml` in the project workspace (discovered by walking up from cwd).
 
-- example: `config/sandboxes.example.json`
-- local (gitignored): `config/sandboxes.json`
-
-Override with env `SANDBOX_CONFIG_FILE`.
+See `config/workspace.example.yaml` and `config/README.md` in the mcp-tools repo.

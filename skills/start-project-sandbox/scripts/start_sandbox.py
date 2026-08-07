@@ -313,37 +313,42 @@ def main() -> int:
 	parser = argparse.ArgumentParser()
 	group = parser.add_mutually_exclusive_group(required=True)
 	group.add_argument('--list', action='store_true')
-	group.add_argument('--check', metavar='PROJECT')
-	group.add_argument('--status', metavar='PROJECT')
-	group.add_argument('--start', metavar='PROJECT')
-	group.add_argument('--stop', metavar='PROJECT')
-	group.add_argument('--diagnose', metavar='PROJECT')
+	group.add_argument('--check', nargs='?', const='', metavar='PROJECT')
+	group.add_argument('--status', nargs='?', const='', metavar='PROJECT')
+	group.add_argument('--start', nargs='?', const='', metavar='PROJECT')
+	group.add_argument('--stop', nargs='?', const='', metavar='PROJECT')
+	group.add_argument('--diagnose', nargs='?', const='', metavar='PROJECT')
+	parser.add_argument('--cwd', default=os.getcwd())
+	parser.add_argument('--manifest', type=Path)
 	args = parser.parse_args()
 	root = Path(__file__).resolve().parents[3]
 	if str(root) not in sys.path:
 		sys.path.insert(0, str(root))
-	from mcp_paths import SANDBOXES
-	config_path = Path(os.environ.get('SANDBOX_CONFIG_FILE', SANDBOXES))
+	from workspace_manifest import ManifestError, assert_project_name, discover_manifest, list_payload
 
 	try:
-		data = load_config(config_path)
-		all_items = data['components']
+		manifest = discover_manifest(cwd=Path(args.cwd), manifest=args.manifest)
 		if args.list:
-			return emit({'status': 'ok', 'action': 'list', 'projects': available_projects(data)}, 0)
-		project = args.check or args.status or args.start or args.stop or args.diagnose
-		items = load_components(config_path, project)
-	except (OSError, ValueError, json.JSONDecodeError) as error:
+			return emit(list_payload(manifest), 0)
+		requested = args.check if args.check is not None else args.status if args.status is not None else args.start if args.start is not None else args.stop if args.stop is not None else args.diagnose
+		explicit = requested if requested else None
+		assert_project_name(manifest, explicit)
+		project = explicit or manifest['name']
+		items = list(manifest['sandbox']['components'])
+		if not items:
+			raise ValueError(f"manifest {manifest.get('manifest_path')} has no sandbox.components")
+	except (OSError, ValueError, json.JSONDecodeError, ManifestError) as error:
 		return emit({'status': 'failed', 'errors': [str(error)]}, 2)
 
 	errors = validate(items)
 	if errors:
 		return emit({'status': 'failed', 'action': 'check', 'project': project, 'errors': errors}, 2)
-	if args.check:
+	if args.check is not None:
 		return emit({'status': 'ok', 'action': 'check', 'project': project, 'components': [item['component'] for item in items]}, 0)
-	if args.status:
+	if args.status is not None:
 		components = [component_status(item) for item in items]
 		return emit({'status': 'ok', 'action': 'status', 'project': project, 'components': components}, 0)
-	if args.diagnose:
+	if args.diagnose is not None:
 		components = []
 		for item in items:
 			status = component_status(item)
@@ -354,19 +359,19 @@ def main() -> int:
 
 	results = []
 	lifecycle_errors = []
-	operation_items = items if args.start else list(reversed(items))
+	operation_items = items if args.start is not None else list(reversed(items))
 	for item in operation_items:
-		status, error = start_component(item) if args.start else stop_component(item)
+		status, error = start_component(item) if args.start is not None else stop_component(item)
 		if error:
 			status['error'] = error
 			status['diagnostics'] = diagnostics(item)
 			lifecycle_errors.append(f"{item['component']}: {error}")
 		results.append(status)
-		if error and args.start:
+		if error and args.start is not None:
 			break
 	return emit({
 		'status': 'failed' if lifecycle_errors else 'ok',
-		'action': 'start' if args.start else 'stop',
+		'action': 'start' if args.start is not None else 'stop',
 		'project': project,
 		'components': results,
 		'errors': lifecycle_errors,

@@ -50,4 +50,4 @@ An explicit user request to deploy the task to dev authorizes the checked merge 
 - Require clean working trees except for the single expected conflict-resolution merge during `--continue`.
 - Block rebase, cherry-pick, revert, bisect, detached HEAD, force, reset, stash, clean, branch deletion, and history rewriting.
 - Update local dev only by fast-forwarding from the fetched remote dev before creating the task merge commit.
-- Read ``config/projects-*.json` (see config/README.md)` only when project membership, paths, remotes, or dev branch settings need inspection.
+- Read ``.workspace.yaml`` only when project membership, paths, remotes, or dev branch settings need inspection.

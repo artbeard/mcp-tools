@@ -444,17 +444,27 @@ def main() -> int:
 	action.add_argument('--continue', dest='continue_task', metavar='TASK_ID')
 	parser.add_argument('--project')
 	parser.add_argument('--cwd', default=os.getcwd())
+	parser.add_argument('--manifest', type=Path)
 	args = parser.parse_args()
 	root = Path(__file__).resolve().parents[3]
 	if str(root) not in sys.path:
 		sys.path.insert(0, str(root))
-	from mcp_paths import PROJECTS_DEPLOY
-	config_path = Path(os.environ.get('PROJECT_DEV_CONFIG', PROJECTS_DEPLOY))
+	from workspace_manifest import (
+		ManifestError,
+		as_deploy_project,
+		assert_project_name,
+		discover_manifest,
+		list_payload,
+	)
 	try:
-		projects, protected = load_config(config_path)
+		manifest = discover_manifest(cwd=Path(args.cwd), manifest=args.manifest)
+		assert_project_name(manifest, args.project)
 		if args.list:
-			return emit({'status': 'ok', 'action': 'list', 'projects': [{'key': item['key'], 'type': item['type'], 'repositories': len(item['repositories'])} for item in projects], 'push_target': 'origin/dev'}, 0)
-		project = select_project(projects, args.project, Path(args.cwd))
+			payload = list_payload(manifest)
+			payload['push_target'] = 'origin/dev'
+			return emit(payload, 0)
+		project = as_deploy_project(manifest)
+		protected = set(manifest['git']['protected_branches'])
 		task_id = args.check or args.deploy or args.continue_task
 		assert task_id
 		if run(['git', 'check-ref-format', '--branch', task_id]).returncode != 0:
@@ -491,7 +501,7 @@ def main() -> int:
 			return emit({'status': 'failed', 'action': 'deploy', 'phase': 'remote_race_check', 'project': project['key'], 'task_id': task_id, 'local_merges': local_merges, 'errors': race_errors, 'push_started': False}, 3)
 		pushes, summary, push_errors = push_all_dev(project, plan)
 		return emit({'status': 'failed' if push_errors else 'ok', 'action': 'deploy', 'phase': 'push_dev', 'project': project['key'], 'project_type': project['type'], 'task_id': task_id, 'local_merges': local_merges, 'repositories': pushes, 'push_summary': summary, 'errors': push_errors, 'push_target': 'origin/dev'}, 3 if push_errors else 0)
-	except (OSError, ValueError, json.JSONDecodeError, SafetyError, subprocess.TimeoutExpired) as error:
+	except (OSError, ValueError, json.JSONDecodeError, SafetyError, subprocess.TimeoutExpired, ManifestError) as error:
 		return emit({'status': 'failed', 'errors': [str(error)], 'push_target': 'origin/dev'}, 2)
 
 

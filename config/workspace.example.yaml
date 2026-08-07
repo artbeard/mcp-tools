@@ -1,0 +1,47 @@
+# Copy to the root of a project workspace as `.workspace.yaml`
+# Paths are relative to this file's directory.
+
+schema_version: 1
+name: example-app
+type: multi_repo # multi_repo | monorepo
+aliases: []
+
+repositories:
+  - id: backend
+    path: backend
+    remote: origin
+    branches:
+      base: master # prepare: master|main only
+      mr_target: master
+      dev: dev
+  - id: frontend
+    path: frontend
+    remote: origin
+    branches:
+      base: master
+      mr_target: master
+      dev: dev
+
+git:
+  protected_base_branches: [master, main]
+  protected_branches: [master, main, dev]
+
+sandbox:
+  components:
+    - id: backend
+      repository: backend
+      directory: .
+      runtime: compose # compose | tmux | process
+      start_command: [docker, compose, up, -d]
+      stop_command: [docker, compose, down]
+      probe: { type: compose }
+      timeout_seconds: 60
+    - id: frontend
+      repository: frontend
+      directory: src/html
+      runtime: tmux
+      session: sandbox-example-app-frontend
+      start_command: [npm, run, dev]
+      stop_command: []
+      probe: { type: http, url: "http://127.0.0.1:3000/" }
+      timeout_seconds: 30

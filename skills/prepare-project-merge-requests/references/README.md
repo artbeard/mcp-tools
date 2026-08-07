@@ -1,7 +1,3 @@
-Project/MR layout config lives in the repo `config/` directory:
+Layout is defined by `.workspace.yaml` in the project workspace (discovered by walking up from cwd).
 
-- example: `config/projects-mr.example.json`
-- local (gitignored): `config/projects-mr.json`
-- GitLab credentials: `config/gitlab.env` (from `gitlab.env.example`)
-
-Override with env `PROJECT_MR_CONFIG`.
+See `config/workspace.example.yaml` and `config/README.md` in the mcp-tools repo.
