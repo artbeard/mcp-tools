@@ -7,7 +7,7 @@ import (
 )
 
 // Разбор --summonee: префиксы login/id/cloud/uid, голые цифры→id, иначе login;
-// неизвестный префикс — ошибка.
+// неизвестный префикс - ошибка.
 func TestParseSummonee(t *testing.T) {
 	cases := []struct {
 		in   string
@@ -42,7 +42,7 @@ func TestParseSummonee(t *testing.T) {
 	}
 }
 
-// Ключ задачи: QUEUE-123 ок, нижний регистр — нет.
+// Ключ задачи: QUEUE-123 ок, нижний регистр - нет.
 func TestValidIssueKey(t *testing.T) {
 	if !tracker.ValidIssueKey("IT-123") {
 		t.Fatal("IT-123 should be valid")

@@ -1,6 +1,6 @@
 # TODO: миграция скиллов → mcp-tools
 
-Единый stdio MCP (`server.py`) + пакеты в `skills/`. Runtime для агентов — MCP tools, не `~/.codex/skills`.
+Единый stdio MCP (`server.py`) + пакеты в `skills/`. Runtime для агентов - MCP tools, не `~/.codex/skills`.
 
 ## Перечень
 
@@ -15,15 +15,15 @@
 | `abcage-tracker-commenter` | `yandex-tracker-commenter` | 4 | done |
 | `abcage-mr-commenter` | `gitlab-mr-commenter` | 4 | done |
 | `abcage-mr-reviewer` | `gitlab-mr-reviewer` | 5 | deferred |
-| — | codestyle MCP/skill | 5 | deferred |
+| - | codestyle MCP/skill | 5 | deferred |
 
 ## Фазы
 
-- [x] **1** — `TODO.md`, каркас `server.py`, README с конфигами Codex/Cursor/Zed
-- [x] **2** — sandbox/git skills + MCP tools
-- [x] **3** — `yandex-tracker-timekeeper`
-- [x] **4** — Tracker issue/comment + `gitlab-mr-commenter` (`dry_run=true` по умолчанию)
-- [ ] **5** — `gitlab-mr-reviewer` + кодстайл (отдельная сессия)
+- [x] **1** - `TODO.md`, каркас `server.py`, README с конфигами Codex/Cursor/Zed
+- [x] **2** - sandbox/git skills + MCP tools
+- [x] **3** - `yandex-tracker-timekeeper`
+- [x] **4** - Tracker issue/comment + `gitlab-mr-commenter` (`dry_run=true` по умолчанию)
+- [ ] **5** - `gitlab-mr-reviewer` + кодстайл (отдельная сессия)
 
 ## MCP tools (текущие)
 

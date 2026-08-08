@@ -1,7 +1,7 @@
-.PHONY: build build-tracker-transition build-tracker-comment test-go
+.PHONY: build build-tracker-transition build-tracker-comment build-tracker-create-issue test-go
 
-# Собрать оба Tracker CLI в bin/
-build: build-tracker-transition build-tracker-comment
+# Собрать все Tracker CLI в bin/
+build: build-tracker-transition build-tracker-comment build-tracker-create-issue
 
 # Смена статуса задачи → bin/tracker-transition
 build-tracker-transition:
@@ -12,6 +12,11 @@ build-tracker-transition:
 build-tracker-comment:
 	mkdir -p bin
 	go build -o bin/tracker-comment ./skills/yandex-tracker-commenter/cmd/tracker-comment
+
+# Создание задачи → bin/tracker-create-issue
+build-tracker-create-issue:
+	mkdir -p bin
+	go build -o bin/tracker-create-issue ./skills/yandex-tracker-issue-creator/cmd/tracker-create-issue
 
 # Прогнать все Go-тесты
 test-go:

@@ -82,6 +82,13 @@ def _tracker_comment_cmd() -> list[str]:
     return ["go", "run", "./skills/yandex-tracker-commenter/cmd/tracker-comment"]
 
 
+def _tracker_create_issue_cmd() -> list[str]:
+    binary = ROOT / "bin" / "tracker-create-issue"
+    if binary.is_file() and os.access(binary, os.X_OK):
+        return [str(binary)]
+    return ["go", "run", "./skills/yandex-tracker-issue-creator/cmd/tracker-create-issue"]
+
+
 def _write_temp(text: str, suffix: str = ".txt") -> Path:
     handle = tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=suffix, delete=False)
     handle.write(text)
@@ -330,9 +337,9 @@ def yandex_tracker_issue_creator(
     sp_field: str | None = None,
     assignee: str | None = None,
     fields: list[str] | None = None,
-    env_file: str | None = None,
+    env_dir: str | None = None,
 ) -> str:
-    script = SKILLS / "yandex-tracker-issue-creator" / "scripts" / "create_tracker_issue.py"
+    # Go CLI tracker-create-issue; description через tempfile
     desc_path = _write_temp(description, suffix=".md")
     try:
         args = [
@@ -342,9 +349,8 @@ def yandex_tracker_issue_creator(
             summary,
             "--description-file",
             str(desc_path),
-            "--env-file",
-            env_file or str(DEFAULT_TRACKER_ENV),
         ]
+        args.extend(_opt("--env-dir", env_dir))
         args.extend(_opt("--project", project))
         args.extend(_opt("--project-field", project_field))
         for tag in tags or []:
@@ -357,11 +363,9 @@ def yandex_tracker_issue_creator(
         args.extend(_opt("--assignee", assignee))
         for field in fields or []:
             args.extend(["--field", field])
-        env: dict[str, str] | None = None
         if not dry_run:
-            args.append("--send")
-            env = {"CONFIRM_SEND": "YES"}
-        return _run(script, args, env=env)
+            args.extend(["--send", "--confirm-send"])
+        return _run(Path(), args, command=_tracker_create_issue_cmd())
     finally:
         desc_path.unlink(missing_ok=True)
 

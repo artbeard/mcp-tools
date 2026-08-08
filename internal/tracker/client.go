@@ -1,4 +1,4 @@
-// Package tracker — тонкий HTTP-клиент Yandex Tracker API (issues / transitions).
+// Package tracker - тонкий HTTP-клиент Yandex Tracker API (issues / transitions).
 // Общий код для будущих Go-тулов: comment, create-issue, timekeeper.
 package tracker
 
@@ -43,7 +43,7 @@ func NewClient(env map[string]string) (*Client, error) {
 	}, nil
 }
 
-// do — общий GET/POST с OAuth и Org-заголовками. Тело ответа — сырой JSON.
+// do - общий GET/POST с OAuth и Org-заголовками. Тело ответа - сырой JSON.
 func (c *Client) do(method, url string, payload any) (json.RawMessage, error) {
 	if strings.TrimSpace(c.Token) == "" {
 		return nil, fmt.Errorf("TRACKER_OAUTH_TOKEN is empty")
@@ -88,7 +88,7 @@ func (c *Client) do(method, url string, payload any) (json.RawMessage, error) {
 	return json.RawMessage(data), nil
 }
 
-// GetIssue — GET /v2/issues/{key}
+// GetIssue - GET /v2/issues/{key}
 func (c *Client) GetIssue(issueKey string) (map[string]any, error) {
 	raw, err := c.do(http.MethodGet, fmt.Sprintf("%s/v2/issues/%s", c.BaseURL, issueKey), nil)
 	if err != nil {
@@ -101,7 +101,7 @@ func (c *Client) GetIssue(issueKey string) (map[string]any, error) {
 	return issue, nil
 }
 
-// ListTransitions — доступные переходы из текущего статуса задачи
+// ListTransitions - доступные переходы из текущего статуса задачи
 func (c *Client) ListTransitions(issueKey string) ([]map[string]any, error) {
 	raw, err := c.do(http.MethodGet, fmt.Sprintf("%s/v2/issues/%s/transitions", c.BaseURL, issueKey), nil)
 	if err != nil {
@@ -114,7 +114,7 @@ func (c *Client) ListTransitions(issueKey string) ([]map[string]any, error) {
 	return transitions, nil
 }
 
-// ExecuteTransition — POST …/transitions/{id}/_execute (реальная смена статуса)
+// ExecuteTransition - POST …/transitions/{id}/_execute (реальная смена статуса)
 func (c *Client) ExecuteTransition(issueKey, transitionID string) (json.RawMessage, error) {
 	url := fmt.Sprintf("%s/v2/issues/%s/transitions/%s/_execute", c.BaseURL, issueKey, transitionID)
 	return c.do(http.MethodPost, url, map[string]any{})
@@ -137,7 +137,7 @@ func StatusSummary(issue map[string]any) any {
 	}
 }
 
-// CompactTransitions — урезанный список для JSON-ответа (без лишних полей API).
+// CompactTransitions - урезанный список для JSON-ответа (без лишних полей API).
 func CompactTransitions(transitions []map[string]any) []map[string]any {
 	out := make([]map[string]any, 0, len(transitions))
 	for _, item := range transitions {
@@ -151,7 +151,7 @@ func CompactTransitions(transitions []map[string]any) []map[string]any {
 	return out
 }
 
-// normalizedValues — все «имена» transition в нижнем регистре для сравнения с --target.
+// normalizedValues - все «имена» transition в нижнем регистре для сравнения с --target.
 func normalizedValues(item map[string]any) map[string]struct{} {
 	values := map[string]struct{}{}
 	add := func(v any) {
@@ -175,7 +175,7 @@ func normalizedValues(item map[string]any) map[string]struct{} {
 	return values
 }
 
-// TargetAliases — синонимы статуса («открыто» ≈ open, «в работе» ≈ inProgress).
+// TargetAliases - синонимы статуса («открыто» ≈ open, «в работе» ≈ inProgress).
 func TargetAliases(target string) map[string]struct{} {
 	target = strings.TrimSpace(strings.ToLower(target))
 	aliases := map[string]struct{}{target: {}}

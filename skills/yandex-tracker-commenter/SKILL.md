@@ -39,7 +39,7 @@ TRACKER_OAUTH_TOKEN=
 1. Считай просьбу `создай/напиши/подготовь комментарий` указанием самостоятельно изучить доступный контекст задачи, написать готовый комментарий и довести его до успешного dry-run. Это не является разрешением на реальную публикацию.
 2. Без подтверждения прочитай задачу, комментарии, метаданные и при необходимости скачай доступные вложения. Любые операции, гарантированно не меняющие Tracker, выполняй сразу.
 3. Подготовь полный финальный текст комментария.
-4. Если нужен призыв без `@` в тексте, используй `--summonee`. Форматы: `login:example.user`, `id:<tracker-user-id>`, `cloud:<cloudUid>`, `uid:<uid>`, `passport:<passportUid>`, `tracker:<trackerUid>`. Plain non-numeric значение трактуется как login, plain digits — как id.
+4. Если нужен призыв без `@` в тексте, используй `--summonee`. Форматы: `login:example.user`, `id:<tracker-user-id>`, `cloud:<cloudUid>`, `uid:<uid>`, `passport:<passportUid>`, `tracker:<trackerUid>`. Plain non-numeric значение трактуется как login, plain digits - как id.
 5. Если нужен ответ на существующий комментарий, используй `--reply-to-comment <COMMENT_ID_OR_LONG_ID>`. Можно передать обычный numeric comment id: CLI сам получит Tracker `longId`.
 6. Без подтверждения выполни dry-run:
 

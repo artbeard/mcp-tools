@@ -28,7 +28,7 @@ func main() {
 	markupType := flag.String("markup-type", "", "markupType Tracker (только md)")
 	envDir := flag.String("env-dir", "", "каталог с .env / .env.local (по умолчанию корень mcp-tools)")
 	replyTo := flag.String("reply-to-comment", "", "numeric comment id или 24-char longId")
-	send := flag.Bool("send", false, "реально отправить (без флага — dry-run)")
+	send := flag.Bool("send", false, "реально отправить (без флага - dry-run)")
 	confirmSend := flag.Bool("confirm-send", false, "подтверждение отправки (вместе с --send)")
 	var summonees stringList
 	flag.Var(&summonees, "summonee", "кого призвать (повторяемый); login:… / id:… / …")

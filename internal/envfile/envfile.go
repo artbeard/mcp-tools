@@ -1,5 +1,5 @@
-// Package envfile — разбор KEY=VALUE env-файлов.
-// Основной вход: LoadDir — .env (обязателен) + .env.local (опционально, поверх).
+// Package envfile - разбор KEY=VALUE env-файлов.
+// Основной вход: LoadDir - .env (обязателен) + .env.local (опционально, поверх).
 package envfile
 
 import (

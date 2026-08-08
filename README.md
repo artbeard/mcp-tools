@@ -1,7 +1,7 @@
 # mcp-tools
 
 Единый **stdio MCP-сервер** с детерминированными tools для агентов (Zed / Codex CLI / Cursor).  
-Логика живёт в `skills/*/scripts`; MCP — thin wrapper. Отдельный daemon не нужен: хост сам стартует процесс по `command` + `args`.
+Логика живёт в `skills/*/scripts`; MCP - thin wrapper. Отдельный daemon не нужен: хост сам стартует процесс по `command` + `args`.
 
 ```text
 mcp-tools/
@@ -78,13 +78,13 @@ args = ["<REPO>/server.py"]
 }
 ```
 
-После правки — перезапуск MCP / агента. В UI должны появиться tools ниже.
+После правки - перезапуск MCP / агента. В UI должны появиться tools ниже.
 
-**Safety:** write-tools по умолчанию `dry_run=true`. Реальная запись только при `dry_run=false` после явного подтверждения в чате. Токены не в чат — в env-файлах.
+**Safety:** write-tools по умолчанию `dry_run=true`. Реальная запись только при `dry_run=false` после явного подтверждения в чате. Токены не в чат - в env-файлах.
 
 ## Env / secrets
 
-Все креды и machine-specific layout — в [`config/`](config/README.md). Примеры коммитятся как `*.example*`; рабочие файлы в `.gitignore`.
+Все креды и machine-specific layout - в [`config/`](config/README.md). Примеры коммитятся как `*.example*`; рабочие файлы в `.gitignore`.
 
 ```bash
 cp config/tracker.env.example config/tracker.env
@@ -107,7 +107,7 @@ cp config/workspace.example.yaml /path/to/workspace/.workspace.yaml
 Минимум Tracker: `TRACKER_OAUTH_TOKEN`, `TRACKER_ORG_ID` или `TRACKER_CLOUD_ORG_ID`.  
 Минимум GitLab: `GITLAB_BASE_URL`, `GITLAB_TOKEN`.
 
-Креды — в `config/*.env`. Layout проектов — в `.workspace.yaml` у workspace (см. [config/README.md](config/README.md)).
+Креды - в `config/*.env`. Layout проектов - в `.workspace.yaml` у workspace (см. [config/README.md](config/README.md)).
 
 ## Tools
 
@@ -166,8 +166,9 @@ Merge task → `dev` и push только `origin/dev`.
 
 - **Зачем:** завести issue с queue/summary/description/SP/assignee.
 - **Параметры:** `queue`, `summary`, `description`; `dry_run=true` по умолчанию; теги/period/sp/assignee опционально.
-- **Env:** `config/tracker.env`
+- **Env:** `.env` / `.env.local` в корне mcp-tools
 - **Важно:** реальный create только `dry_run=false` после подтверждения payload.
+- **CLI (Go):** `make build-tracker-create-issue` → `./bin/tracker-create-issue`
 
 ### `yandex_tracker_comment` / `yandex_tracker_transition`
 
@@ -176,7 +177,7 @@ Merge task → `dev` и push только `origin/dev`.
 - **Зачем:** опубликовать комментарий / сделать transition.
 - **Параметры:** `issue_key`, `body` / `target`; `dry_run=true` по умолчанию.
 - **Env:** `.env` / `.env.local` в корне mcp-tools
-- **CLI (Go):** `make build` → `./bin/tracker-comment`, `./bin/tracker-transition`
+- **CLI (Go):** `make build` → `./bin/tracker-comment`, `./bin/tracker-transition`, `./bin/tracker-create-issue`
 
 ### `gitlab_mr_comment`
 
@@ -190,11 +191,11 @@ MR note или line discussion в GitLab.
 
 ## Отложено (фаза 5)
 
-- `gitlab-mr-reviewer` — оркестратор поверх GitLab MCP + codeStyle
+- `gitlab-mr-reviewer` - оркестратор поверх GitLab MCP + codeStyle
 - отдельный codestyle skill/MCP
 
 См. [TODO.md](TODO.md).
 
 ## Детали workflow
 
-Полные safety-правила и сценарии — в `skills/*/SKILL.md` (source of truth для агента при чтении репо). Поведение write-операций для всех хостов одинаковое: default dry-run в MCP layer.
+Полные safety-правила и сценарии - в `skills/*/SKILL.md` (source of truth для агента при чтении репо). Поведение write-операций для всех хостов одинаковое: default dry-run в MCP layer.

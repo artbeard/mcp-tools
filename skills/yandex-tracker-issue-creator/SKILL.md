@@ -4,20 +4,21 @@ description: Создание задач в Yandex Tracker через локал
 ---
 # Yandex Tracker Issue Creator
 
-Используй этот skill для создания задач в Yandex Tracker  от имени пользователя, чей OAuth token лежит в локальном env.
+Используй этот skill для создания задач в Yandex Tracker от имени пользователя, чей OAuth token лежит в локальном env.
 
 ## Обязательные источники
 
 Перед созданием задачи прочитай `references/safety.md`.
 
-Для создания задач используй только `scripts/create_tracker_issue.py`.
+Для создания задач используй только Go CLI `bin/tracker-create-issue` (собрать: `make build-tracker-create-issue`).
 
 ## Конфигурация
 
-Ожидаемый env-файл:
+Ожидаемые env-файлы в корне mcp-tools:
 
 ```text
-config/tracker.env
+.env
+.env.local   # опционально, перекрывает .env
 ```
 
 Минимальные переменные:
@@ -55,11 +56,11 @@ TRACKER_SP_FIELD=storyPoints
    - SP и field key, если указан;
    - assignee;
    - extra fields;
-   - source authorization как `Tracker token из `config/tracker.env``.
+   - source authorization как `Tracker token из .env`.
 5. Выполни dry-run:
 
 ```bash
-python3 skills/yandex-tracker-issue-creator/scripts/create_tracker_issue.py \
+./bin/tracker-create-issue \
   --queue "<QUEUE>" \
   --summary "<SUMMARY>" \
   --description-file "<DESCRIPTION_FILE>" \
@@ -74,7 +75,7 @@ python3 skills/yandex-tracker-issue-creator/scripts/create_tracker_issue.py \
 7. Только после успешного dry-run и свежего подтверждения выполни реальное создание:
 
 ```bash
-CONFIRM_SEND=YES python3 skills/yandex-tracker-issue-creator/scripts/create_tracker_issue.py \
+./bin/tracker-create-issue \
   --queue "<QUEUE>" \
   --summary "<SUMMARY>" \
   --description-file "<DESCRIPTION_FILE>" \
@@ -83,7 +84,8 @@ CONFIRM_SEND=YES python3 skills/yandex-tracker-issue-creator/scripts/create_trac
   --period "<PERIOD>" \
   --sp "<SP>" \
   --assignee "<ASSIGNEE>" \
-  --send
+  --send \
+  --confirm-send
 ```
 
 8. Верни пользователю key/URL созданной задачи или точную ошибку Tracker API.
@@ -98,7 +100,7 @@ CONFIRM_SEND=YES python3 skills/yandex-tracker-issue-creator/scripts/create_trac
 - `--period`: период задачи, например `2026-07-01..2026-07-12` или `2026-W29`.
 - `--sp`: story points, число.
 - `--assignee`: исполнитель. Plain значение трактуется как login; можно использовать `login:example.user`, `id:...`, `uid:...`, `passport:...`, `tracker:...`, `cloud:...`.
-- `--field KEY=VALUE`: произвольное поле Tracker. JSON value поддерживается, например `--field parent='{"key":"IT-123"}'`.
+- `--field KEY=VALUE`: произвольное поле Tracker. JSON value поддерживается, например `--field parent={"key":"IT-123"}`.
 
 ## Запреты
 

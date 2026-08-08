@@ -17,7 +17,7 @@ import (
 func main() {
 	issueKey := flag.String("issue-key", "", "ключ задачи (например IT-123)")
 	target := flag.String("target", "Открыто", "целевой статус: display / key / id")
-	send := flag.Bool("send", false, "реально выполнить transition (без флага — dry-run)")
+	send := flag.Bool("send", false, "реально выполнить transition (без флага - dry-run)")
 	confirmSend := flag.Bool("confirm-send", false, "подтверждение отправки (вместе с --send)")
 	envDir := flag.String("env-dir", "", "каталог с .env / .env.local (по умолчанию корень mcp-tools)")
 	flag.Parse()
@@ -70,7 +70,7 @@ func run(issueKey, target string, send, confirmSend bool, envDir string) error {
 	// Ищем transition, у которого id/key/display/to совпал с --target (с алиасами)
 	match := tracker.MatchTransition(transitions, target)
 	if match == nil {
-		// Ничего не подходит — отдаём список, exit 2 (как в питоне)
+		// Ничего не подходит - отдаём список, exit 2 (как в питоне)
 		payload := map[string]any{
 			"status":         "NO_MATCH",
 			"issue_key":      issueKey,
@@ -81,7 +81,7 @@ func run(issueKey, target string, send, confirmSend bool, envDir string) error {
 		return printJSON(payload, 2)
 	}
 
-	// id в JSON иногда строка, иногда число — приводим к строке для URL
+	// id в JSON иногда строка, иногда число - приводим к строке для URL
 	transitionID, _ := match["id"].(string)
 	if transitionID == "" {
 		if id := match["id"]; id != nil {
@@ -129,7 +129,7 @@ func run(issueKey, target string, send, confirmSend bool, envDir string) error {
 	return printJSON(result, 0)
 }
 
-// printJSON пишет ответ агенту/человеку в stdout. exitCode≠0 — сразу os.Exit.
+// printJSON пишет ответ агенту/человеку в stdout. exitCode≠0 - сразу os.Exit.
 func printJSON(payload any, exitCode int) error {
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetEscapeHTML(false)

@@ -17,12 +17,12 @@ var (
 	objectIDRe = regexp.MustCompile(`^[0-9a-f]{24}$`)
 )
 
-// ValidIssueKey — формат QUEUE-123.
+// ValidIssueKey - формат QUEUE-123.
 func ValidIssueKey(key string) bool {
 	return issueKeyRe.MatchString(key)
 }
 
-// OrgHeader — имя и значение org-заголовка для dry-run JSON.
+// OrgHeader - имя и значение org-заголовка для dry-run JSON.
 func (c *Client) OrgHeader() (name, value string) {
 	if c.CloudOrgID != "" {
 		return "X-Cloud-Org-ID", c.CloudOrgID
@@ -30,7 +30,7 @@ func (c *Client) OrgHeader() (name, value string) {
 	return "X-Org-ID", c.OrgID
 }
 
-// CommentsURL — POST endpoint комментариев к задаче.
+// CommentsURL - POST endpoint комментариев к задаче.
 func (c *Client) CommentsURL(issueKey string) string {
 	return fmt.Sprintf("%s/v2/issues/%s/comments", c.BaseURL, url.PathEscape(issueKey))
 }
@@ -94,7 +94,7 @@ func isAllDigits(s string) bool {
 	return true
 }
 
-// ResolveReplyTo: 24-char longId как есть; numeric id — GET comment → longId.
+// ResolveReplyTo: 24-char longId как есть; numeric id - GET comment → longId.
 func (c *Client) ResolveReplyTo(issueKey, replyTo string) (string, error) {
 	replyTo = strings.TrimSpace(replyTo)
 	if replyTo == "" {
@@ -128,7 +128,7 @@ func (c *Client) ResolveReplyTo(issueKey, replyTo string) (string, error) {
 	return longID, nil
 }
 
-// PostComment — POST /v2/issues/{key}/comments.
+// PostComment - POST /v2/issues/{key}/comments.
 func (c *Client) PostComment(issueKey string, payload map[string]any) (map[string]any, error) {
 	raw, err := c.do(http.MethodPost, c.CommentsURL(issueKey), payload)
 	if err != nil {

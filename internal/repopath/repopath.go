@@ -1,4 +1,4 @@
-// Package repopath — поиск корня репозитория mcp-tools на диске.
+// Package repopath - поиск корня репозитория mcp-tools на диске.
 package repopath
 
 import (
@@ -53,7 +53,7 @@ func markerExists(dir string) bool {
 	return false
 }
 
-// EnvDir — каталог с .env / .env.local (корень mcp-tools).
+// EnvDir - каталог с .env / .env.local (корень mcp-tools).
 func EnvDir() (string, error) {
 	return Root()
 }
