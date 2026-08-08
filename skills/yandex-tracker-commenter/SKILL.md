@@ -11,7 +11,7 @@ description: Подготовка и публикация комментарие
 Перед отправкой прочитай `references/safety.md`.
 
 Для публикации комментариев используй только `scripts/post_tracker_comment.py`.
-Для перевода статуса используй только `scripts/transition_tracker_issue.py`.
+Для перевода статуса используй только Go CLI `bin/tracker-transition` (собрать: `make build-tracker-transition`).
 
 ## Конфигурация
 
@@ -79,7 +79,7 @@ python3 skills/yandex-tracker-commenter/scripts/post_tracker_comment.py \
 3. Без подтверждения выполни dry-run, чтобы сопоставить целевой статус с доступным transition:
 
 ```bash
-python3 skills/yandex-tracker-commenter/scripts/transition_tracker_issue.py \
+./bin/tracker-transition \
   --issue-key "<ISSUE_KEY>" \
   --target "<TARGET_STATUS>"
 ```
@@ -89,7 +89,7 @@ python3 skills/yandex-tracker-commenter/scripts/transition_tracker_issue.py \
 6. После подтверждения выполни реальный transition:
 
 ```bash
-python3 skills/yandex-tracker-commenter/scripts/transition_tracker_issue.py \
+./bin/tracker-transition \
   --issue-key "<ISSUE_KEY>" \
   --target "<TARGET_STATUS>" \
   --send \

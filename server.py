@@ -36,14 +36,20 @@ def _run(
     *,
     cwd: str | None = None,
     env: dict[str, str] | None = None,
+    command: list[str] | None = None,
 ) -> str:
-    if not script.is_file():
-        return f"ERROR: script not found: {script}"
+    # command=None → обычный Python-скрипт; иначе готовая команда (например Go-бинарь)
+    if command is None:
+        if not script.is_file():
+            return f"ERROR: script not found: {script}"
+        command = [PYTHON, str(script), *args]
+    else:
+        command = [*command, *args]
     merged = os.environ.copy()
     if env:
         merged.update(env)
     result = subprocess.run(
-        [PYTHON, str(script), *args],
+        command,
         capture_output=True,
         text=True,
         cwd=cwd or str(ROOT),
@@ -59,6 +65,14 @@ def _run(
     if result.returncode != 0:
         return f"exit={result.returncode}\n{body}".strip()
     return body or f"exit={result.returncode}"
+
+
+def _tracker_transition_cmd() -> list[str]:
+    # Смена статуса Tracker уже на Go: берём собранный бинарь, иначе go run
+    binary = ROOT / "bin" / "tracker-transition"
+    if binary.is_file() and os.access(binary, os.X_OK):
+        return [str(binary)]
+    return ["go", "run", "./skills/yandex-tracker-commenter/cmd/tracker-transition"]
 
 
 def _write_temp(text: str, suffix: str = ".txt") -> Path:
@@ -396,11 +410,11 @@ def yandex_tracker_transition(
     target: str = "Открыто",
     dry_run: bool = True,
 ) -> str:
-    script = SKILLS / "yandex-tracker-commenter" / "scripts" / "transition_tracker_issue.py"
+    # Не Python-скрипт: зовём Go CLI tracker-transition
     args = ["--issue-key", issue_key, "--target", target]
     if not dry_run:
         args.extend(["--send", "--confirm-send"])
-    return _run(script, args)
+    return _run(Path(), args, command=_tracker_transition_cmd())
 
 
 # --- gitlab-mr-commenter ---
