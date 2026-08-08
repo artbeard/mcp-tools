@@ -1,7 +1,7 @@
-.PHONY: build build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time test-go
+.PHONY: build build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment test-go
 
-# Собрать все Tracker CLI в bin/
-build: build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time
+# Собрать все Go CLI в bin/
+build: build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment
 
 # Смена статуса задачи → bin/tracker-transition
 build-tracker-transition:
@@ -22,6 +22,11 @@ build-tracker-create-issue:
 build-tracker-time:
 	mkdir -p bin
 	go build -o bin/tracker-time ./skills/yandex-tracker-timekeeper/cmd/tracker-time
+
+# Комментарий в GitLab MR → bin/gitlab-mr-comment
+build-gitlab-mr-comment:
+	mkdir -p bin
+	go build -o bin/gitlab-mr-comment ./skills/gitlab-mr-commenter/cmd/gitlab-mr-comment
 
 # Прогнать все Go-тесты
 test-go:

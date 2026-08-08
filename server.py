@@ -11,13 +11,11 @@ from typing import Any
 
 from mcp.server.mcpserver.server import MCPServer
 
-from mcp_paths import GITLAB_ENV, ROOT, TIMER_STATE, TRACKER_ENV
+from mcp_paths import ROOT, TIMER_STATE
 
 SKILLS = ROOT / "skills"
 PYTHON = sys.executable
 
-DEFAULT_TRACKER_ENV = TRACKER_ENV
-DEFAULT_GITLAB_ENV = GITLAB_ENV
 DEFAULT_TIMER_STATE = TIMER_STATE
 
 mcp = MCPServer(
@@ -94,6 +92,13 @@ def _tracker_time_cmd() -> list[str]:
     if binary.is_file() and os.access(binary, os.X_OK):
         return [str(binary)]
     return ["go", "run", "./skills/yandex-tracker-timekeeper/cmd/tracker-time"]
+
+
+def _gitlab_mr_comment_cmd() -> list[str]:
+    binary = ROOT / "bin" / "gitlab-mr-comment"
+    if binary.is_file() and os.access(binary, os.X_OK):
+        return [str(binary)]
+    return ["go", "run", "./skills/gitlab-mr-commenter/cmd/gitlab-mr-comment"]
 
 
 def _write_temp(text: str, suffix: str = ".txt") -> Path:
@@ -448,9 +453,9 @@ def gitlab_mr_comment(
     file_path: str | None = None,
     line: int | None = None,
     line_type: str = "new",
-    env_file: str | None = None,
+    env_dir: str | None = None,
 ) -> str:
-    script = SKILLS / "gitlab-mr-commenter" / "scripts" / "post_gitlab_mr_comment.py"
+    # Go CLI gitlab-mr-comment
     body_path = _write_temp(body, suffix=".md")
     try:
         args = [
@@ -458,21 +463,18 @@ def gitlab_mr_comment(
             mr_url,
             "--body-file",
             str(body_path),
-            "--env-file",
-            env_file or str(DEFAULT_GITLAB_ENV),
             "--line-type",
             line_type,
         ]
+        args.extend(_opt("--env-dir", env_dir))
         if line_comment:
             args.append("--line-comment")
             args.extend(_opt("--file-path", file_path))
             if line is not None:
                 args.extend(["--line", str(line)])
-        env: dict[str, str] | None = None
         if not dry_run:
-            args.append("--send")
-            env = {"CONFIRM_SEND": "YES"}
-        return _run(script, args, env=env)
+            args.extend(["--send", "--confirm-send"])
+        return _run(Path(), args, command=_gitlab_mr_comment_cmd())
     finally:
         body_path.unlink(missing_ok=True)
 
