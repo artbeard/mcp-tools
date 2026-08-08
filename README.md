@@ -177,7 +177,7 @@ Merge task → `dev` и push только `origin/dev`.
 - **Зачем:** опубликовать комментарий / сделать transition.
 - **Параметры:** `issue_key`, `body` / `target`; `dry_run=true` по умолчанию.
 - **Env:** `.env` / `.env.local` в корне mcp-tools
-- **CLI (Go):** `make build` → `./bin/tracker-comment`, `./bin/tracker-transition`, `./bin/tracker-create-issue`, `./bin/tracker-time`
+- **CLI (Go):** `make build` → `bin/tracker-*`, `bin/gitlab-mr-comment`
 
 ### `gitlab_mr_comment`
 
@@ -185,7 +185,8 @@ MR note или line discussion в GitLab.
 
 - **Зачем:** отправить комментарий в MR.
 - **Параметры:** `mr_url`, `body`; `line_comment` + `file_path`/`line`/`line_type` для discussion; `dry_run=true` по умолчанию.
-- **Env:** `config/gitlab.env`
+- **Env:** `.env` / `.env.local` (`GITLAB_TOKEN`)
+- **CLI (Go):** `make build-gitlab-mr-comment` → `./bin/gitlab-mr-comment`
 
 ---
 
