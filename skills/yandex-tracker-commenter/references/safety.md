@@ -15,11 +15,11 @@
 - Подтверждение запрашивается только перед реальной записывающей операцией; повторное подтверждение неизменённой операции не требуется.
 - Dry-run должен пройти до реальной отправки.
 - Для реальной отправки обязательны оба CLI-флага: `--send` и `--confirm-send`. `CONFIRM_SEND=YES` оставлен только для обратной совместимости.
-- Запускай скрипты напрямую через одобренный Python-префикс; не используй `/usr/bin/env` или inline environment assignment, чтобы не провоцировать повторные системные запросы разрешения.
+- Запускай CLI напрямую из `bin/`; не используй `/usr/bin/env` или inline environment assignment, чтобы не провоцировать повторные системные запросы разрешения.
 
 ## Токен
 
-- Токен хранится только в `config/tracker.env`.
+- Токен хранится только в `.env` / `.env.local` в корне mcp-tools.
 - Файл должен иметь права `600`.
 - Токен, ClientID и Client secret не должны попадать в чат, git, logs, body-файлы или error output.
 - Нужен OAuth token с правом добавлять комментарии в задачи Tracker.
@@ -27,18 +27,18 @@
 
 ## Что Делать При Ошибках
 
-- `env file not found`: попроси пользователя локально создать env-файл.
+- `.env обязателен` / env file not found: попроси пользователя локально создать `.env` (`cp .env.example .env`).
 - `TRACKER_OAUTH_TOKEN is empty`: попроси пользователя локально заполнить OAuth token.
 - `TRACKER_ORG_ID or TRACKER_CLOUD_ORG_ID is required`: попроси указать org id в env.
 - `401/403`: token невалиден, истёк, не имеет прав или нет доступа к задаче.
 - `404`: issue key неверный или у пользователя нет доступа.
-- `--send requires --confirm-send or CONFIRM_SEND=YES`: повторно проверь, было ли подтверждение пользователя, и используй `--confirm-send` в прямом запуске Python-скрипта.
+- `--send requires --confirm-send or CONFIRM_SEND=YES`: повторно проверь, было ли подтверждение пользователя, и используй `--confirm-send`.
 
 ## Границы
 
-- Скрипт отправляет только обычный комментарий к задаче.
-- Скрипт может добавить `summonees` в create-comment payload, чтобы призвать пользователя без `@` в тексте.
-- Скрипт может добавить `replyTo` в create-comment payload, чтобы ответить на существующий комментарий. Для numeric comment id скрипт предварительно читает комментарий и использует его `longId`.
-- Скрипт комментариев не меняет статус, assignee, labels, components, links, sprint, followers, checklist или поля задачи.
-- Скрипт transition меняет только статус через выбранный Tracker workflow transition и не меняет другие поля.
-- Скрипт не выполняет OAuth flow и не хранит Client secret.
+- CLI отправляет только обычный комментарий к задаче.
+- CLI может добавить `summonees` в create-comment payload, чтобы призвать пользователя без `@` в тексте.
+- CLI может добавить `replyTo` в create-comment payload, чтобы ответить на существующий комментарий. Для numeric comment id предварительно читает комментарий и использует его `longId`.
+- CLI комментариев не меняет статус, assignee, labels, components, links, sprint, followers, checklist или поля задачи.
+- CLI transition меняет только статус через выбранный Tracker workflow transition и не меняет другие поля.
+- CLI не выполняет OAuth flow и не хранит Client secret.
