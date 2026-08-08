@@ -1,6 +1,18 @@
 # Local configuration (not committed)
 
-## Credentials
+## Credentials (Go: `.env` + `.env.local`)
+
+Go-тулы грузят из корня репо: обязательный `.env`, опциональный `.env.local` (перекрывает ключи).
+
+```bash
+cp .env.example .env
+chmod 600 .env
+# fill tokens; overrides → .env.local
+```
+
+## Credentials (Python skills: `config/*.env`)
+
+Пока Python-скрипты ещё читают отдельные файлы:
 
 ```bash
 cp config/tracker.env.example config/tracker.env
@@ -11,8 +23,9 @@ chmod 600 config/tracker.env config/gitlab.env
 
 | File | Used by |
 |------|---------|
-| `tracker.env` | Tracker tools |
-| `gitlab.env` | GitLab MR commenter + prepare MRs |
+| `.env` / `.env.local` | Go CLI (например `tracker-transition`) |
+| `config/tracker.env` | Python Tracker tools |
+| `config/gitlab.env` | Python GitLab tools |
 
 ## Workspace layout (`.workspace.yaml`)
 

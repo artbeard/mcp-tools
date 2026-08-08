@@ -6,9 +6,13 @@
 ```text
 mcp-tools/
   server.py          # точка входа MCP (stdio)
+  cmd/               # Go CLI tools (постепенно)
+  internal/          # общий Go-код
   skills/            # пакеты (SKILL.md + scripts + references)
-  TODO.md            # статус переноса
+  config/            # env examples + workspace.example.yaml
+  TODO.md
   requirements.txt
+  go.mod
   .venv/             # локальный python + mcp
 ```
 
@@ -172,6 +176,7 @@ Merge task → `dev` и push только `origin/dev`.
 - **Зачем:** опубликовать комментарий / сделать transition.
 - **Параметры:** `issue_key`, `body` / `target`; `dry_run=true` по умолчанию.
 - **Env:** `tracker.env`
+- **Transition CLI (Go):** `make build-tracker-transition` → `./bin/tracker-transition --issue-key IT-123 --target "Открыто"`
 
 ### `gitlab_mr_comment`
 
