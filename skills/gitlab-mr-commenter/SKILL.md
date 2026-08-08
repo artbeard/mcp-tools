@@ -10,14 +10,15 @@ description: Публикация комментариев в GitLab merge reque
 
 Перед отправкой прочитай `references/safety.md`.
 
-Для реальной публикации используй только скрипт `scripts/post_gitlab_mr_comment.py`.
+Для реальной публикации используй только Go CLI `bin/gitlab-mr-comment` (собрать: `make build-gitlab-mr-comment`).
 
 ## Конфигурация
 
-Ожидаемый env-файл:
+Ожидаемые env-файлы в корне mcp-tools:
 
 ```text
-config/gitlab.env
+.env
+.env.local   # опционально, перекрывает .env
 ```
 
 Минимальные переменные:
@@ -27,18 +28,20 @@ GITLAB_BASE_URL=https://gitlab.example.com
 GITLAB_TOKEN=
 ```
 
+Если `GITLAB_BASE_URL` пуст, берётся host из `--mr-url`.
+
 Никогда не проси пользователя вставить токен в чат. Если токен отсутствует, попроси заполнить `GITLAB_TOKEN` локально.
 
 ## Workflow
 
 1. Подготовь полный текст комментария.
-2. Для MR-level note покажи пользователю exact final body, MR URL и источник токена как `GitLab token из config/gitlab.env`.
+2. Для MR-level note покажи пользователю exact final body, MR URL и источник токена как `GitLab token из .env`.
 3. Для line discussion дополнительно покажи exact file path, line number и line type (`new` или `old`).
 4. Получи явное подтверждение пользователя именно на отправку этого текста в этот MR и, если это line discussion, именно в эту строку.
 5. Выполни dry-run для MR-level note:
 
 ```bash
-python3 skills/gitlab-mr-commenter/scripts/post_gitlab_mr_comment.py \
+./bin/gitlab-mr-comment \
   --mr-url "<MR_URL>" \
   --body-file "<BODY_FILE>"
 ```
@@ -46,7 +49,7 @@ python3 skills/gitlab-mr-commenter/scripts/post_gitlab_mr_comment.py \
 Или dry-run для line discussion:
 
 ```bash
-python3 skills/gitlab-mr-commenter/scripts/post_gitlab_mr_comment.py \
+./bin/gitlab-mr-comment \
   --mr-url "<MR_URL>" \
   --body-file "<BODY_FILE>" \
   --line-comment \
@@ -58,10 +61,11 @@ python3 skills/gitlab-mr-commenter/scripts/post_gitlab_mr_comment.py \
 6. Только после успешного dry-run и подтверждения выполни реальную отправку:
 
 ```bash
-CONFIRM_SEND=YES python3 skills/gitlab-mr-commenter/scripts/post_gitlab_mr_comment.py \
+./bin/gitlab-mr-comment \
   --mr-url "<MR_URL>" \
   --body-file "<BODY_FILE>" \
-  --send
+  --send \
+  --confirm-send
 ```
 
 Для line discussion добавь те же `--line-comment --file-path --line --line-type`.
