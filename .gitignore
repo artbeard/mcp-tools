@@ -30,3 +30,7 @@ config/sandboxes.json
 # Local state
 *.log
 .output/
+
+# Go
+bin/
+*.exe
