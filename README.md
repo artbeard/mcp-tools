@@ -157,8 +157,8 @@ Merge task → `dev` и push только `origin/dev`.
 
 - **Зачем:** учёт времени по ключу задачи (`IT-123`).
 - **Параметры:** `action` = `start|status|stop|write|clear`; `issue_key`; `comment`; для `write`: `dry_run` (default true), `round_to`.
-- **Env:** `tracker.env`; state-файл см. выше.
-- **CLI:** `python skills/yandex-tracker-timekeeper/scripts/tracker_time.py status`
+- **Env:** `.env` / `.env.local` для `write --send`; state-файл см. выше.
+- **CLI (Go):** `make build-tracker-time` → `./bin/tracker-time status`
 
 ### `yandex_tracker_issue_creator`
 
@@ -177,7 +177,7 @@ Merge task → `dev` и push только `origin/dev`.
 - **Зачем:** опубликовать комментарий / сделать transition.
 - **Параметры:** `issue_key`, `body` / `target`; `dry_run=true` по умолчанию.
 - **Env:** `.env` / `.env.local` в корне mcp-tools
-- **CLI (Go):** `make build` → `./bin/tracker-comment`, `./bin/tracker-transition`, `./bin/tracker-create-issue`
+- **CLI (Go):** `make build` → `./bin/tracker-comment`, `./bin/tracker-transition`, `./bin/tracker-create-issue`, `./bin/tracker-time`
 
 ### `gitlab_mr_comment`
 

@@ -11,8 +11,10 @@ Goal: time accounting should happen without the user having to explicitly say "s
 ## Tool
 
 ```bash
-python3 skills/yandex-tracker-timekeeper/scripts/tracker_time.py ...
+./bin/tracker-time ...
 ```
+
+Сборка: `make build-tracker-time`.
 
 Local timer state:
 
@@ -20,13 +22,16 @@ Local timer state:
 ~/.local/state/mcp-tools/tracker-time.json
 ```
 
-If that file does not exist, the script may migrate from `/tmp/.tracker-time.json`, then writes to the persistent path above. The state file must not store tokens.
+If that file does not exist, the CLI may migrate from `/tmp/.tracker-time.json` or the legacy codex-writable path, then writes to the persistent path above. The state file must not store tokens.
 
-Tracker auth is read from:
+Tracker auth (для `write --send`) читается из:
 
 ```text
-config/tracker.env
+.env
+.env.local   # опционально
 ```
+
+в корне mcp-tools.
 
 ## Automatic Workflow
 
@@ -35,7 +40,7 @@ Local timer operations (`status`, `start`, `stop`, dry-run `write`) may run with
 1. On substantive work for an issue key:
 
 ```bash
-python3 skills/yandex-tracker-timekeeper/scripts/tracker_time.py start <ISSUE_KEY> --comment "<short work description>"
+./bin/tracker-time start <ISSUE_KEY> --comment "<short work description>"
 ```
 
 2. If another timer is active for a different issue, stop it first when the switch is clear; otherwise report and ask.
@@ -43,23 +48,23 @@ python3 skills/yandex-tracker-timekeeper/scripts/tracker_time.py start <ISSUE_KE
 3. Status:
 
 ```bash
-python3 skills/yandex-tracker-timekeeper/scripts/tracker_time.py status
+./bin/tracker-time status
 ```
 
 4. Stop:
 
 ```bash
-python3 skills/yandex-tracker-timekeeper/scripts/tracker_time.py stop --comment "<what was done>"
+./bin/tracker-time stop --comment "<what was done>"
 ```
 
 5. Dry-run write:
 
 ```bash
-python3 skills/yandex-tracker-timekeeper/scripts/tracker_time.py write --issue-key <ISSUE_KEY> --round-to 1
+./bin/tracker-time write --issue-key <ISSUE_KEY> --round-to 1
 ```
 
 6. After user confirms exact duration/comment, send:
 
 ```bash
-python3 skills/yandex-tracker-timekeeper/scripts/tracker_time.py write --issue-key <ISSUE_KEY> --round-to 1 --send --confirm-send
+./bin/tracker-time write --issue-key <ISSUE_KEY> --round-to 1 --send --confirm-send
 ```

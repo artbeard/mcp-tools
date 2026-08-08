@@ -89,6 +89,13 @@ def _tracker_create_issue_cmd() -> list[str]:
     return ["go", "run", "./skills/yandex-tracker-issue-creator/cmd/tracker-create-issue"]
 
 
+def _tracker_time_cmd() -> list[str]:
+    binary = ROOT / "bin" / "tracker-time"
+    if binary.is_file() and os.access(binary, os.X_OK):
+        return [str(binary)]
+    return ["go", "run", "./skills/yandex-tracker-timekeeper/cmd/tracker-time"]
+
+
 def _write_temp(text: str, suffix: str = ".txt") -> Path:
     handle = tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=suffix, delete=False)
     handle.write(text)
@@ -272,17 +279,14 @@ def yandex_tracker_timekeeper(
     dry_run: bool = True,
     clear_active: bool = False,
     clear_sessions: bool = False,
-    env_file: str | None = None,
+    env_dir: str | None = None,
     state_file: str | None = None,
 ) -> str:
-    script = SKILLS / "yandex-tracker-timekeeper" / "scripts" / "tracker_time.py"
+    # Go CLI tracker-time
     action = action.strip().lower()
-    args = [
-        "--env-file",
-        env_file or str(DEFAULT_TRACKER_ENV),
-        "--state-file",
-        state_file or str(DEFAULT_TIMER_STATE),
-    ]
+    args: list[str] = []
+    args.extend(_opt("--state-file", state_file or str(DEFAULT_TIMER_STATE)))
+    args.extend(_opt("--env-dir", env_dir))
     if action == "start":
         if not issue_key:
             return "ERROR: issue_key required for start"
@@ -311,7 +315,7 @@ def yandex_tracker_timekeeper(
         args.extend(_opt("--issue-key", issue_key))
     else:
         return "ERROR: action must be start|status|stop|write|clear"
-    return _run(script, args)
+    return _run(Path(), args, command=_tracker_time_cmd())
 
 
 # --- yandex-tracker-issue-creator ---
