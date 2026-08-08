@@ -175,8 +175,8 @@ Merge task → `dev` и push только `origin/dev`.
 
 - **Зачем:** опубликовать комментарий / сделать transition.
 - **Параметры:** `issue_key`, `body` / `target`; `dry_run=true` по умолчанию.
-- **Env:** `tracker.env`
-- **Transition CLI (Go):** `make build-tracker-transition` → `./bin/tracker-transition --issue-key IT-123 --target "Открыто"`
+- **Env:** `.env` / `.env.local` в корне mcp-tools
+- **CLI (Go):** `make build` → `./bin/tracker-comment`, `./bin/tracker-transition`
 
 ### `gitlab_mr_comment`
 
