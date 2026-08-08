@@ -4,6 +4,10 @@
 # Explicit text types
 *.md text eol=lf
 *.py text eol=lf
+*.go text eol=lf
+go.mod text eol=lf
+go.sum text eol=lf
+Makefile text eol=lf
 *.sh text eol=lf
 *.json text eol=lf
 *.yaml text eol=lf
