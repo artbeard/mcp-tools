@@ -23,8 +23,8 @@ chmod 600 config/tracker.env config/gitlab.env
 
 | File | Used by |
 |------|---------|
-| `.env` / `.env.local` | Go CLI (transition, comment, create-issue) |
-| `config/tracker.env` | Python Tracker tools (timekeeper и т.п.) |
+| `.env` / `.env.local` | Go CLI (transition, comment, create-issue, time) |
+| `config/tracker.env` | (legacy) Python Tracker tools, если ещё остались |
 | `config/gitlab.env` | Python GitLab tools |
 
 ## Workspace layout (`.workspace.yaml`)
