@@ -75,6 +75,13 @@ def _tracker_transition_cmd() -> list[str]:
     return ["go", "run", "./skills/yandex-tracker-commenter/cmd/tracker-transition"]
 
 
+def _tracker_comment_cmd() -> list[str]:
+    binary = ROOT / "bin" / "tracker-comment"
+    if binary.is_file() and os.access(binary, os.X_OK):
+        return [str(binary)]
+    return ["go", "run", "./skills/yandex-tracker-commenter/cmd/tracker-comment"]
+
+
 def _write_temp(text: str, suffix: str = ".txt") -> Path:
     handle = tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=suffix, delete=False)
     handle.write(text)
@@ -375,9 +382,9 @@ def yandex_tracker_comment(
     markup_type: str | None = None,
     summonees: list[str] | None = None,
     reply_to_comment: str | None = None,
-    env_file: str | None = None,
+    env_dir: str | None = None,
 ) -> str:
-    script = SKILLS / "yandex-tracker-commenter" / "scripts" / "post_tracker_comment.py"
+    # Go CLI tracker-comment; body через tempfile
     body_path = _write_temp(body, suffix=".md")
     try:
         args = [
@@ -385,16 +392,15 @@ def yandex_tracker_comment(
             issue_key,
             "--body-file",
             str(body_path),
-            "--env-file",
-            env_file or str(DEFAULT_TRACKER_ENV),
         ]
+        args.extend(_opt("--env-dir", env_dir))
         args.extend(_opt("--markup-type", markup_type))
         for summonee in summonees or []:
             args.extend(["--summonee", summonee])
         args.extend(_opt("--reply-to-comment", reply_to_comment))
         if not dry_run:
             args.extend(["--send", "--confirm-send"])
-        return _run(script, args)
+        return _run(Path(), args, command=_tracker_comment_cmd())
     finally:
         body_path.unlink(missing_ok=True)
 

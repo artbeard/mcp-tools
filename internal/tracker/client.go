@@ -21,12 +21,10 @@ type Client struct {
 	HTTP       *http.Client
 }
 
-// NewClient собирает клиента из map env (как после envfile.Load).
+// NewClient собирает клиента из map env (как после envfile.LoadDir).
+// Токен может быть пустым для dry-run без API; do() потребует его при запросе.
 func NewClient(env map[string]string) (*Client, error) {
 	token := strings.TrimSpace(env["TRACKER_OAUTH_TOKEN"])
-	if token == "" {
-		return nil, fmt.Errorf("TRACKER_OAUTH_TOKEN is empty")
-	}
 	orgID := strings.TrimSpace(env["TRACKER_ORG_ID"])
 	cloudOrgID := strings.TrimSpace(env["TRACKER_CLOUD_ORG_ID"])
 	if orgID == "" && cloudOrgID == "" {
@@ -47,6 +45,9 @@ func NewClient(env map[string]string) (*Client, error) {
 
 // do — общий GET/POST с OAuth и Org-заголовками. Тело ответа — сырой JSON.
 func (c *Client) do(method, url string, payload any) (json.RawMessage, error) {
+	if strings.TrimSpace(c.Token) == "" {
+		return nil, fmt.Errorf("TRACKER_OAUTH_TOKEN is empty")
+	}
 	var body io.Reader
 	if payload != nil {
 		raw, err := json.Marshal(payload)
@@ -61,11 +62,12 @@ func (c *Client) do(method, url string, payload any) (json.RawMessage, error) {
 	}
 	req.Header.Set("Authorization", "OAuth "+c.Token)
 	req.Header.Set("Content-Type", "application/json")
-	// Обычный org или cloud-org — что заполнено в env
-	if c.OrgID != "" {
-		req.Header.Set("X-Org-ID", c.OrgID)
-	} else {
+	req.Header.Set("Accept", "application/json")
+	// Cloud-org приоритетнее (как в Python-клиенте), иначе обычный org
+	if c.CloudOrgID != "" {
 		req.Header.Set("X-Cloud-Org-ID", c.CloudOrgID)
+	} else {
+		req.Header.Set("X-Org-ID", c.OrgID)
 	}
 
 	resp, err := c.HTTP.Do(req)
