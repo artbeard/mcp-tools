@@ -101,6 +101,13 @@ def _gitlab_mr_comment_cmd() -> list[str]:
     return ["go", "run", "./skills/gitlab-mr-commenter/cmd/gitlab-mr-comment"]
 
 
+def _prepare_task_cmd() -> list[str]:
+    binary = ROOT / "bin" / "prepare-task"
+    if binary.is_file() and os.access(binary, os.X_OK):
+        return [str(binary)]
+    return ["go", "run", "./skills/prepare-project-task/cmd/prepare-task"]
+
+
 def _write_temp(text: str, suffix: str = ".txt") -> Path:
     handle = tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=suffix, delete=False)
     handle.write(text)
@@ -168,7 +175,7 @@ def prepare_project_task(
     cwd: str | None = None,
     manifest: str | None = None,
 ) -> str:
-    script = SKILLS / "prepare-project-task" / "scripts" / "prepare_task_branch.py"
+    # Go CLI prepare-task
     mode = mode.strip().lower()
     args: list[str] = []
     if mode == "list":
@@ -182,7 +189,7 @@ def prepare_project_task(
     args.extend(_opt("--project", project))
     args.extend(_opt("--cwd", cwd))
     args.extend(_opt("--manifest", manifest))
-    return _run(script, args, cwd=cwd)
+    return _run(Path(), args, command=_prepare_task_cmd(), cwd=cwd)
 
 
 # --- prepare-project-merge-requests ---

@@ -5,14 +5,14 @@ description: Deterministically prepare a local task branch across every Git repo
 
 # Prepare Project Task
 
-Prepare local task branches with `scripts/prepare_task_branch.py`.
+Prepare local task branches with Go CLI `bin/prepare-task` (собрать: `make build-prepare-task`).
 
 ## Workflow
 
 1. Extract the task ID exactly. Never invent or normalize it.
-2. Let the script detect the project from the current directory. Pass `--project <key>` only when the user names another configured project explicitly.
-3. Run `python3 scripts/prepare_task_branch.py --check <task-id> [--project <key>]`.
-4. If the check succeeds, run `python3 scripts/prepare_task_branch.py --prepare <task-id> [--project <key>]`.
+2. Let the CLI detect the project from the current directory. Pass `--project <key>` only when the user names another configured project explicitly.
+3. Run `./bin/prepare-task --check <task-id> [--project <key>]`.
+4. If the check succeeds, run `./bin/prepare-task --prepare <task-id> [--project <key>]`.
 5. Report the selected project type and resulting local branch in every repository.
 
 Use `--list` to inspect configured projects. Read ``.workspace.yaml`` only when project membership, type, paths, remotes, or base branches need inspection or updating.
@@ -42,4 +42,4 @@ The prepare command repeats the complete preflight, inspects remote branches, fe
 - Never use stash, reset, clean, rebase, forced checkout, forced branch creation, branch deletion, or history rewriting.
 - Never use a protected base branch name as a task ID.
 - Never overwrite or reuse a local or remote task branch.
-- Stop on any failure and report the exact phase and partial state from the script JSON.
+- Stop on any failure and report the exact phase and partial state from the CLI JSON.
