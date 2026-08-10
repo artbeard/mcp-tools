@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codestyle"
+  short_description: "Find and read PHP/Symfony + Vue/TS coding rules"
+  default_prompt: "Используй $codestyle: найди релевантные правила через find_rules и прочитай critical перед правками кода."

@@ -1,0 +1,262 @@
+{
+	"version": "0.1.0",
+	"updated": "2026-05-12",
+	"entries": [
+		{
+			"file": "INDEX.md",
+			"category": "general",
+			"tags": ["index", "navigation", "top-7", "critical"],
+			"tasks": ["обзор стека", "критичные правила", "топ-7", "точка входа"],
+			"priority": "critical",
+			"summary": "Точка входа: стек, ТОП-7 критичных правил (MUST), уровни приоритета RFC 2119."
+		},
+		{
+			"file": "formatting.md",
+			"category": "general",
+			"tags": ["formatting", "tabs", "allman", "indent", "braces", "whitespace", "refactor", "legacy", "cleanup"],
+			"tasks": ["отступы", "табы", "Allman скобки", "форматирование", "пробелы", "рефакторинг", "legacy"],
+			"priority": "critical",
+			"summary": "MUST: табы 4sp (PHP/JS/TS), 3sp (HTML/Twig). MUST: Allman-скобки — { на новой строке."
+		},
+		{
+			"file": "naming.md",
+			"category": "general",
+			"tags": ["naming", "camelCase", "PascalCase", "snake_case", "conventions", "refactor", "legacy", "rename"],
+			"tasks": ["именование", "naming", "стиль имён", "PascalCase", "snake_case", "переименование", "rename"],
+			"priority": "normal",
+			"summary": "Соглашения: camelCase для переменных, PascalCase для классов, snake_case для БД."
+		},
+		{
+			"file": "error-handling.md",
+			"category": "general",
+			"tags": ["error-handling", "exceptions", "try-catch", "throw"],
+			"tasks": ["обработка ошибок", "исключения", "exceptions", "try catch"],
+			"priority": "normal",
+			"summary": "Политика try/catch: исключения пробрасываем, ловим только для изменения поведения."
+		},
+		{
+			"file": "dependencies.md",
+			"category": "general",
+			"tags": ["dependencies", "composer", "npm", "packages"],
+			"tasks": ["зависимости", "пакеты", "composer", "npm install"],
+			"priority": "normal",
+			"summary": "Согласование зависимостей: запрет самовольно ставить новые пакеты, нужен MR-ревью."
+		},
+		{
+			"file": "git-workflow.md",
+			"category": "general",
+			"tags": ["git", "branches", "commits", "MR", "merge-request", "code-review"],
+			"tasks": ["git", "ветки", "коммиты", "MR", "ревью миграций"],
+			"priority": "normal",
+			"summary": "Ветки, MR, коммиты, особый порядок ревью миграций (DDL only, no data)."
+		},
+		{
+			"file": "docker.md",
+			"category": "general",
+			"tags": ["docker", "docker-compose", "php-fpm", "containers"],
+			"tasks": ["docker", "docker-compose", "контейнеры", "сеть"],
+			"priority": "normal",
+			"summary": "Конвенции docker-compose, php-fpm, общая сеть проектов."
+		},
+		{
+			"file": "controller.md",
+			"category": "backend",
+			"tags": ["controller", "symfony", "route", "MapRequestPayload", "api", "endpoint", "http"],
+			"tasks": ["контроллер", "controller", "endpoint", "API", "route", "REST"],
+			"priority": "critical",
+			"summary": "Thin controllers: #[MapRequestPayload], HTTP-код = результат, без success-обёрток, делегация в Service."
+		},
+		{
+			"file": "service.md",
+			"category": "backend",
+			"tags": ["service", "business-logic", "DI", "EntityManager", "stateless"],
+			"tasks": ["сервис", "service", "бизнес-логика", "EntityManager"],
+			"priority": "critical",
+			"summary": "MUST: EntityManagerInterface (не Repository). Stateless. Пакетная обработка."
+		},
+		{
+			"file": "dto.md",
+			"category": "backend",
+			"tags": ["dto", "data-transfer-object", "readonly", "fromArray", "fromEntity"],
+			"tasks": ["DTO", "fromArray", "fromEntity", "data transfer"],
+			"priority": "critical",
+			"summary": "MUST: final readonly class. fromArray()/fromEntity(). Без ??null на обязательных полях."
+		},
+		{
+			"file": "entity.md",
+			"category": "backend",
+			"tags": ["entity", "doctrine", "make:entity", "orm", "migration", "table"],
+			"tasks": ["entity", "сущность", "make:entity", "Doctrine", "ORM", "таблица", "миграция"],
+			"priority": "critical",
+			"summary": "MUST: только make:entity. Types::*, обязательные комментарии полей, plain int FK без JoinColumn."
+		},
+		{
+			"file": "repository.md",
+			"category": "backend",
+			"tags": ["repository", "querybuilder", "dql", "doctrine"],
+			"tasks": ["repository", "querybuilder", "DQL", "извлечение данных"],
+			"priority": "normal",
+			"summary": "QueryBuilder, DQL, кастомные методы поиска, наследование от ServiceEntityRepository."
+		},
+		{
+			"file": "database.md",
+			"category": "backend",
+			"tags": ["database", "sql", "raw-sql", "heredoc", "executeQuery", "ParameterType", "migration"],
+			"tasks": ["SQL", "raw SQL", "heredoc", "executeQuery", "ParameterType", "сырой запрос", "миграция"],
+			"priority": "normal",
+			"summary": "Heredoc SQL, executeQuery/executeStatement, ParameterType::*, Doctrine-миграции только для DDL."
+		},
+		{
+			"file": "modules.md",
+			"category": "backend",
+			"tags": ["modules", "src-modules", "feature-isolation"],
+			"tasks": ["модуль", "src/Modules", "изоляция", "архитектура модуля"],
+			"priority": "normal",
+			"summary": "Структура src/Modules/<Feature>/, изоляция, что общее vs модульное."
+		},
+		{
+			"file": "commands.md",
+			"category": "backend",
+			"tags": ["commands", "AsCommand", "console", "symfony-style", "cli"],
+			"tasks": ["консоль", "command", "CLI", "AsCommand", "SymfonyStyle"],
+			"priority": "normal",
+			"summary": "Консольные команды через #[AsCommand], SymfonyStyle для вывода."
+		},
+		{
+			"file": "messenger.md",
+			"category": "backend",
+			"tags": ["messenger", "async", "queue", "handlers", "transports"],
+			"tasks": ["messenger", "асинхронность", "очередь", "обработчики", "транспорт"],
+			"priority": "normal",
+			"summary": "Symfony Messenger: асинхронные сообщения, обработчики, транспорты."
+		},
+		{
+			"file": "component.md",
+			"category": "frontend",
+			"tags": ["vue", "component", "script-setup", "props", "emits", "vuelidate", "form"],
+			"tasks": ["компонент", "Vue", "script setup", "props", "emits", "форма", "валидация", "Vuelidate"],
+			"priority": "critical",
+			"summary": "MUST: <script setup lang=\"ts\">. Props/emits с типами, Vuelidate для форм."
+		},
+		{
+			"file": "store.md",
+			"category": "frontend",
+			"tags": ["pinia", "store", "state", "actions", "promise", "storeToRefs"],
+			"tasks": ["store", "Pinia", "состояние", "actions", "Promise", "storeToRefs"],
+			"priority": "critical",
+			"summary": "Pinia defineStore. Actions возвращают Promise, реджект на статусе != 200, storeToRefs()."
+		},
+		{
+			"file": "composables.md",
+			"category": "frontend",
+			"tags": ["composables", "use-prefix", "reactive", "helpers"],
+			"tasks": ["composable", "use-функция", "переиспользуемая логика", "хелпер"],
+			"priority": "normal",
+			"summary": "Префикс use*, реактивные vs чистые, формат-функции в src/helpers/."
+		},
+		{
+			"file": "typescript.md",
+			"category": "frontend",
+			"tags": ["typescript", "strict", "types", "interfaces", "discriminated-unions", "any"],
+			"tasks": ["TypeScript", "типы", "strict", "interfaces", "discriminated union", "никакого any"],
+			"priority": "critical",
+			"summary": "MUST: strict: true. Префикс I* для интерфейсов. Discriminated unions. Никакого any."
+		},
+		{
+			"file": "routing.md",
+			"category": "frontend",
+			"tags": ["routing", "vue-router", "lazy-loading", "meta", "rbac"],
+			"tasks": ["router", "роутинг", "страница", "lazy load", "meta", "ролевое меню"],
+			"priority": "normal",
+			"summary": "Vue Router: ленивая загрузка, мета-заголовки, ролевое меню."
+		},
+		{
+			"file": "structure.md",
+			"category": "frontend",
+			"tags": ["structure", "architecture", "shared", "domain", "layers"],
+			"tasks": ["архитектура", "структура", "shared", "domain", "слои", "layout"],
+			"priority": "normal",
+			"summary": "Гибридная архитектура: shared + domain. Правила взаимодействия слоёв."
+		},
+		{
+			"file": "styles.md",
+			"category": "frontend",
+			"tags": ["scss", "styles", "scoped", "primevue", "tailwind"],
+			"tasks": ["стили", "SCSS", "scoped", "PrimeVue", "Tailwind"],
+			"priority": "normal",
+			"summary": "PrimeVue и Tailwind CSS для UI/стилей; SCSS scoped только для кастома."
+		},
+		{
+			"file": "api-layer.md",
+			"category": "frontend",
+			"tags": ["api", "ky", "axios", "http-client", "jwt", "endpoints"],
+			"tasks": ["API", "HTTP", "ky", "axios", "JWT", "endpoint", "интеграция с бэком"],
+			"priority": "critical",
+			"summary": "ky для новых проектов, axios — legacy. JWT в hooks, доменные модули, флаг глобальной загрузки."
+		},
+		{
+			"file": "eslint.md",
+			"category": "frontend",
+			"tags": ["eslint", "lint", "flat-config", "allman"],
+			"tasks": ["ESLint", "линт", "flat config", "Allman"],
+			"priority": "normal",
+			"summary": "ESLint flat config с правилом 'brace-style': ['error', 'allman'] и табами."
+		},
+		{
+			"file": "INDEX.md",
+			"category": "patterns",
+			"tags": ["patterns", "index", "data-flow", "crud"],
+			"tasks": ["паттерны", "data flow", "CRUD"],
+			"priority": "normal",
+			"summary": "Точка входа в архитектурные паттерны: data-flow, CRUD, security, testing."
+		},
+		{
+			"file": "crud-flow.md",
+			"category": "patterns",
+			"tags": ["crud", "create", "read", "update", "delete", "http-codes", "stateless"],
+			"tasks": ["CRUD", "создание", "чтение", "обновление", "удаление", "HTTP-коды"],
+			"priority": "critical",
+			"summary": "Полный CRUD end-to-end: DTO на входе, Entity не в ответе, HTTP 201/204."
+		},
+		{
+			"file": "data-flow.md",
+			"category": "patterns",
+			"tags": ["data-flow", "request", "response", "layers", "pipeline"],
+			"tasks": ["data flow", "поток данных", "запрос", "ответ", "слои"],
+			"priority": "normal",
+			"summary": "Полный путь запроса/ответа через все слои Frontend ↔ Backend."
+		},
+		{
+			"file": "api-contract.md",
+			"category": "patterns",
+			"tags": ["api-contract", "frontend-backend", "dto-mapping"],
+			"tasks": ["API контракт", "frontend-backend", "DTO mapping"],
+			"priority": "normal",
+			"summary": "Контракты Frontend ↔ Backend, маппинг DTO между слоями."
+		},
+		{
+			"file": "module-structure.md",
+			"category": "patterns",
+			"tags": ["module", "scaffold", "fullstack-feature"],
+			"tasks": ["новый модуль", "scaffold", "fullstack feature"],
+			"priority": "normal",
+			"summary": "Скаффолд нового модуля (backend + frontend), стартовый набор файлов."
+		},
+		{
+			"file": "security.md",
+			"category": "patterns",
+			"tags": ["security", "jwt", "auth", "passport", "sso", "current-user", "rbac", "profile"],
+			"tasks": ["безопасность", "JWT", "Passport", "SSO", "авторизация", "current user", "RBAC", "права", "auth/profile"],
+			"priority": "critical",
+			"summary": "Passport SSO + JWT verify-only, GET /auth/profile для roles, #[CurrentUser]. Канон: PASSPORT_INTEGRATION_GUIDE."
+		},
+		{
+			"file": "testing.md",
+			"category": "patterns",
+			"tags": ["testing", "phpunit", "vitest", "tests"],
+			"tasks": ["тесты", "тестирование", "PHPUnit", "Vitest"],
+			"priority": "normal",
+			"summary": "PHPUnit на backend, Vitest на frontend, стратегия unit/integration."
+		}
+	]
+}

@@ -124,6 +124,19 @@ func registerTools(s *server.MCPServer) {
 		mcp.WithString("line_type", mcp.Description("new|old"), mcp.DefaultString("new")),
 		mcp.WithString("env_dir", mcp.Description("каталог с .env / .env.local")),
 	), handleGitLabMRComment)
+
+	// skills/codestyle — поиск релевантных правил по описанию задачи.
+	s.AddTool(mcp.NewTool("codestyle_find_rules",
+		mcp.WithDescription("Ищет правила кодстайла (PHP/Symfony + Vue/TS) по описанию задачи. Вернёт URI + priority + summary; затем читай critical через codestyle_read_rule. Не пиши код «по памяти»."),
+		mcp.WithString("task", mcp.Required(), mcp.Description("описание задачи ru/en, минимум 3 символа")),
+		mcp.WithNumber("max_results", mcp.Description("макс. результатов 1..15"), mcp.DefaultNumber(8)),
+	), handleCodestyleFindRules)
+
+	// skills/codestyle — чтение полного текста правила по URI.
+	s.AddTool(mcp.NewTool("codestyle_read_rule",
+		mcp.WithDescription("Читает полный markdown правила по URI из codestyle_find_rules (например codestyle://backend/dto)."),
+		mcp.WithString("uri", mcp.Required(), mcp.Description("codestyle://category/file")),
+	), handleCodestyleReadRule)
 }
 
 func handlePing(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -426,6 +439,22 @@ func handleGitLabMRComment(_ context.Context, req mcp.CallToolRequest) (*mcp.Cal
 		args = append(args, "--send", "--confirm-send")
 	}
 	return textResult(runCLI(resolveCmd("gitlab-mr-comment", "./skills/gitlab-mr-commenter/cmd/gitlab-mr-comment"), args, "")), nil
+}
+
+func handleCodestyleFindRules(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	task := strings.TrimSpace(req.GetString("task", ""))
+	maxResults := req.GetInt("max_results", 8)
+	args := []string{"find-rules", "--task", task, "--max-results", fmt.Sprintf("%d", maxResults)}
+	return textResult(runCLI(resolveCmd("codestyle", "./skills/codestyle/cmd/codestyle"), args, "")), nil
+}
+
+func handleCodestyleReadRule(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	uri := strings.TrimSpace(req.GetString("uri", ""))
+	if uri == "" {
+		return textResult("ОШИБКА: нужен uri"), nil
+	}
+	args := []string{"read-rule", "--uri", uri}
+	return textResult(runCLI(resolveCmd("codestyle", "./skills/codestyle/cmd/codestyle"), args, "")), nil
 }
 
 func textResult(s string) *mcp.CallToolResult {
