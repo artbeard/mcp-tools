@@ -115,6 +115,13 @@ def _prepare_mr_cmd() -> list[str]:
     return ["go", "run", "./skills/prepare-project-merge-requests/cmd/prepare-mr"]
 
 
+def _deploy_task_cmd() -> list[str]:
+    binary = ROOT / "bin" / "deploy-task"
+    if binary.is_file() and os.access(binary, os.X_OK):
+        return [str(binary)]
+    return ["go", "run", "./skills/deploy-project-task-to-dev/cmd/deploy-task"]
+
+
 def _write_temp(text: str, suffix: str = ".txt") -> Path:
     handle = tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=suffix, delete=False)
     handle.write(text)
@@ -259,7 +266,7 @@ def deploy_project_task_to_dev(
     cwd: str | None = None,
     manifest: str | None = None,
 ) -> str:
-    script = SKILLS / "deploy-project-task-to-dev" / "scripts" / "deploy_task_to_dev.py"
+    # Go CLI deploy-task
     mode = mode.strip().lower()
     args: list[str] = []
     if mode == "list":
@@ -277,7 +284,7 @@ def deploy_project_task_to_dev(
     args.extend(_opt("--project", project))
     args.extend(_opt("--cwd", cwd))
     args.extend(_opt("--manifest", manifest))
-    return _run(script, args, cwd=cwd)
+    return _run(Path(), args, command=_deploy_task_cmd(), cwd=cwd)
 
 
 # --- yandex-tracker-timekeeper ---

@@ -9,7 +9,7 @@
 | `start-project-sandbox` | `start-project-sandbox` | `start_project_sandbox` | в репо (Python) |
 | `prepare-project-task` | `prepare-project-task` | `prepare_project_task` | Go |
 | `prepare-project-merge-requests` | `prepare-project-merge-requests` | `prepare_project_merge_requests` | Go |
-| `deploy-project-task-to-dev` | `deploy-project-task-to-dev` | `deploy_project_task_to_dev` | в репо (Python) |
+| `deploy-project-task-to-dev` | `deploy-project-task-to-dev` | `deploy_project_task_to_dev` | Go |
 | `abcage-tracker-timekeeper` | `yandex-tracker-timekeeper` | `yandex_tracker_timekeeper` | Go |
 | `abcage-tracker-issue-creator` | `yandex-tracker-issue-creator` | `yandex_tracker_issue_creator` | Go |
 | `abcage-tracker-commenter` | `yandex-tracker-commenter` | `yandex_tracker_comment` / `yandex_tracker_transition` | Go |
@@ -33,6 +33,7 @@
 - [x] `gitlab-mr-comment` → `bin/gitlab-mr-comment`
 - [x] `prepare-task` → `bin/prepare-task`
 - [x] `prepare-mr` → `bin/prepare-mr`
+- [x] `deploy-task` → `bin/deploy-task`
 - [x] общие пакеты: `internal/envfile` (`.env` + `.env.local`), `internal/tracker`, `internal/gitlab`, `internal/timerstate`, `internal/repopath`, `internal/workspace`, `internal/gitcmd`
 
 ## Go: осталось перенести
@@ -41,10 +42,10 @@
 
 - [x] `prepare-project-task` → `bin/prepare-task`
 - [x] `prepare-project-merge-requests` → `bin/prepare-mr`
-- [ ] `deploy-project-task-to-dev` (`deploy_task_to_dev.py`) - merge task → `dev`
+- [x] `deploy-project-task-to-dev` → `bin/deploy-task`
 - [ ] `start-project-sandbox` (`start_sandbox.py`) - docker/tmux/process lifecycle
 
-Порядок дальше: deploy → sandbox.
+Порядок дальше: sandbox.
 
 ## После порта git-скиллов (cleanup)
 
@@ -52,6 +53,7 @@
 - [ ] Обновить README (сейчас местами ещё про `config/*.env`)
 - [ ] Удалить пустые/legacy `scripts/` и `.sh`-обёртки, если не нужны
 - [ ] `workspace_manifest` на Go (или тонкий вызов из CLI), чтобы не тащить Python ради манифеста
+- [ ] Вынести жёстко зашитые имена веток (`master`/`main`/`dev`, ForbiddenTaskBranches, AllowedWorkBases, литерал push `dev`) в конфиг / `.workspace.yaml`
 
 ## Отложено
 

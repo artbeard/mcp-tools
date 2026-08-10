@@ -132,6 +132,7 @@ Health-check сервера.
 - **Параметры:** `mode` = `list|check|prepare`; `task_id`; опционально `project`, `cwd`.
 - **Конфиг:** `.workspace.yaml` (repositories + branches.base)
 - **CLI (Go):** `make build-prepare-task` → `./bin/prepare-task --check IT-123`
+- **Ветки:** work base только `master`/`main` (зашито в `AllowedWorkBases`); task-id не может быть `master`/`main`/`dev`.
 
 ### `prepare_project_merge_requests`
 
@@ -141,6 +142,7 @@ Publish веток + create/reuse GitLab MR.
 - **Параметры:** `mode` = `list|check|create`; `task_id`; опционально `project`, `cwd`, `title`, `description`.
 - **Конфиг:** `.workspace.yaml` + корневой `.env` / `.env.local` (`GITLAB_TOKEN`, `GITLAB_BASE_URL`)
 - **CLI (Go):** `make build-prepare-mr` → `./bin/prepare-mr --check IT-123`
+- **Ветки:** MR target только `master`/`main`; push task только через `PushTaskBranch`.
 
 ### `deploy_project_task_to_dev`
 
@@ -149,7 +151,10 @@ Merge task → `dev` и push только `origin/dev`.
 - **Зачем:** выкатить задачу на dev.
 - **Параметры:** `mode` = `list|check|deploy|continue`; `task_id`; опционально `project`, `cwd`.
 - **Конфиг:** `.workspace.yaml` (branches.dev)
-- **CLI:** `python .../deploy_task_to_dev.py --check IT-123`
+- **CLI (Go):** `make build-deploy-task` → `./bin/deploy-task --check IT-123`
+- **Ветки:** `branches.dev` обязан быть литералом `dev`; push только `refs/heads/dev:refs/heads/dev` (`PushDevBranch`).
+
+**Имена веток жёстко зашиты в коде** (не только defaults манифеста): `master`/`main` как work bases и MR targets, `dev` как единственная deploy/push-ветка, запрет task-id ∈ `{master,main,dev}`. См. `internal/workspace.AllowedWorkBases`, `internal/gitcmd.ForbiddenTaskBranches`, `PushDevBranch`. Манифест может указать `branches.*`, но значения вне этих литералов отклоняются.
 
 ### `yandex_tracker_timekeeper`
 
@@ -189,6 +194,12 @@ MR note или line discussion в GitLab.
 - **CLI (Go):** `make build-gitlab-mr-comment` → `./bin/gitlab-mr-comment`
 
 ---
+
+## TODO
+
+См. также полный список в [TODO.md](TODO.md).
+
+- [ ] Вынести жёстко зашитые имена веток (`master`/`main`/`dev`, ForbiddenTaskBranches, AllowedWorkBases, литерал push `dev`) в конфиг / `.workspace.yaml`, чтобы не править код под другой branching model
 
 ## Отложено (фаза 5)
 
