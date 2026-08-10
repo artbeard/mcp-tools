@@ -1,7 +1,12 @@
-.PHONY: build build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-prepare-task build-prepare-mr build-deploy-task build-start-sandbox test-go
+.PHONY: build build-mcp-server build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-prepare-task build-prepare-mr build-deploy-task build-start-sandbox test-go
 
-# Собрать все Go CLI в bin/
-build: build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-prepare-task build-prepare-mr build-deploy-task build-start-sandbox
+# Собрать MCP-сервер + все Go CLI в bin/
+build: build-mcp-server build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-prepare-task build-prepare-mr build-deploy-task build-start-sandbox
+
+# stdio MCP → bin/mcp-server
+build-mcp-server:
+	mkdir -p bin
+	go build -o bin/mcp-server ./cmd/mcp-server
 
 # Смена статуса задачи → bin/tracker-transition
 build-tracker-transition:

@@ -1,6 +1,6 @@
 # TODO: миграция скиллов → mcp-tools
 
-Единый stdio MCP (`server.py`) + пакеты в `skills/`. Runtime для агентов - MCP tools, не `~/.codex/skills`.
+Единый stdio MCP (`bin/mcp-server`) + пакеты в `skills/`. Runtime для агентов - MCP tools, не `~/.codex/skills`.
 
 ## Перечень (исходная миграция в репо)
 
@@ -19,7 +19,7 @@
 
 ## Ещё не перенесено из оригинальных скиллов
 
-Даже как Python-пакет в `skills/` - пока только в `~/.codex/skills`:
+Даже как пакет в `skills/` - пока только в `~/.codex/skills` (перенос одним приёмом позже):
 
 - [ ] `abcage-mr-reviewer` → `gitlab-mr-reviewer` (оркестратор ревью MR)
 - [ ] **кодстайл / codeStyle** - правила и чеклисты из `abcage-mr-reviewer/references/` (и связанный стиль ревью); отдельный skill/MCP или часть reviewer
@@ -35,34 +35,25 @@
 - [x] `prepare-mr` → `bin/prepare-mr`
 - [x] `deploy-task` → `bin/deploy-task`
 - [x] `start-sandbox` → `bin/start-sandbox`
+- [x] MCP-сервер → `bin/mcp-server` (`cmd/mcp-server`)
 - [x] общие пакеты: `internal/envfile` (`.env` + `.env.local`), `internal/tracker`, `internal/gitlab`, `internal/timerstate`, `internal/repopath`, `internal/workspace`, `internal/gitcmd`, `internal/sandbox`
 
-## Go: осталось перенести
+## Cleanup
 
-Все git/sandbox CLI на Go. Cleanup ниже.
-
-- [x] `prepare-project-task` → `bin/prepare-task`
-- [x] `prepare-project-merge-requests` → `bin/prepare-mr`
-- [x] `deploy-project-task-to-dev` → `bin/deploy-task`
-- [x] `start-project-sandbox` → `bin/start-sandbox`
-
-## После порта git-скиллов (cleanup)
-
-- [ ] Один источник кредов: только корневой `.env` / `.env.local`; убрать `config/tracker.env` / `config/gitlab.env` и чтение из `mcp_paths`
-- [ ] Обновить README (сейчас местами ещё про `config/*.env`)
-- [ ] Удалить пустые/legacy `scripts/` и `.sh`-обёртки, если не нужны
-- [ ] `workspace_manifest` на Go (или тонкий вызов из CLI), чтобы не тащить Python ради манифеста
+- [x] Один источник кредов: корневой `.env` / `.env.local` (legacy `config/*.env` не читается)
+- [x] README без Python MCP / `config/*.env` как primary
+- [x] Runtime Python убран (`server.py`, `workspace_manifest.py`, `mcp_paths.py`, `requirements.txt`)
+- [x] Манифест workspace на Go (`internal/workspace`); `scripts/migrate_*.py` оставлен как one-shot для legacy JSON
 - [ ] Вынести жёстко зашитые имена веток (`master`/`main`/`dev`, ForbiddenTaskBranches, AllowedWorkBases, литерал push `dev`) в конфиг / `.workspace.yaml`
 
 ## Отложено
 
-- [ ] `gitlab-mr-reviewer` + **кодстайл** (см. секцию выше - сначала занести в репо из `~/.codex/skills`)
-- [ ] MCP-сервер на Go (сейчас `server.py` - тонкая обёртка над CLI)
+- [ ] `gitlab-mr-reviewer` + **кодстайл** (см. секцию выше - сначала занести в репо из `~/.codex/skills`, одним приёмом)
 
 ## Follow-up: `.workspace.yaml`
 
-- [x] loader `workspace_manifest.py`
+- [x] loader Go `internal/workspace`
 - [x] prepare / mr / deploy / sandbox на манифест
 - [x] `config/workspace.example.yaml`
-- [x] `scripts/migrate_central_config_to_workspace.py`
-- Локально: `python scripts/migrate_central_config_to_workspace.py --write`
+- [x] `scripts/migrate_central_config_to_workspace.py` (опциональный one-shot)
+- Локально (если ещё есть `config/projects-*.json`): `python3 scripts/migrate_central_config_to_workspace.py --write`

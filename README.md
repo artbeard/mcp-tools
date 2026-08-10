@@ -1,19 +1,17 @@
 # mcp-tools
 
 Единый **stdio MCP-сервер** с детерминированными tools для агентов (Zed / Codex CLI / Cursor).  
-Логика живёт в `skills/*/scripts`; MCP - thin wrapper. Отдельный daemon не нужен: хост сам стартует процесс по `command` + `args`.
+Логика в Go CLI (`skills/*/cmd` → `bin/*`); MCP (`bin/mcp-server`) - thin wrapper. Отдельный daemon не нужен: хост сам стартует процесс по `command` + `args`.
 
 ```text
 mcp-tools/
-  server.py          # точка входа MCP (stdio)
-  cmd/               # Go CLI tools (постепенно)
+  cmd/mcp-server/    # точка входа MCP (stdio) → bin/mcp-server
   internal/          # общий Go-код
-  skills/            # пакеты (SKILL.md + scripts + references)
-  config/            # env examples + workspace.example.yaml
+  skills/            # пакеты (SKILL.md + cmd + references)
+  config/            # workspace.example.yaml + README
+  bin/               # собранные CLI + mcp-server
   TODO.md
-  requirements.txt
   go.mod
-  .venv/             # локальный python + mcp
 ```
 
 ## Установка
@@ -21,21 +19,19 @@ mcp-tools/
 ```bash
 git clone <repo-url> mcp-tools
 cd mcp-tools
-curl -LsSf https://astral.sh/uv/install.sh | sh   # если ещё нет uv
-uv venv .venv
-uv pip install --python .venv/bin/python -r requirements.txt
+make build   # mcp-server + prepare-task/prepare-mr/deploy-task/start-sandbox + tracker-* + gitlab-mr-comment
 ```
 
-Нужен **Go** (для сборки CLI в `bin/`):
-
-```bash
-make build   # prepare-task, prepare-mr, deploy-task, start-sandbox, tracker-*, gitlab-mr-comment
-```
+Нужен **Go** (≥ версии из `go.mod`).
 
 Проверка MCP:
 
 ```bash
-.venv/bin/python -c "from server import mcp; print('ok', mcp.name)"
+printf '%s\n' \
+  '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"t","version":"0"}}}' \
+  '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+  '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ping","arguments":{}}}' \
+  | ./bin/mcp-server
 ```
 
 ### Зависимости хоста (sandbox и команды из манифеста)
@@ -62,7 +58,7 @@ echo "$REPO"
 
 ## Подключение MCP
 
-Один и тот же `command`/`args` везде; ключ конфига разный. Ниже `<REPO>` = абсолютный путь к клону.
+Один и тот же `command`/`args` везде; ключ конфига разный. Ниже `<REPO>` = абсолютный путь к клону. Сначала `make build`.
 
 ### Cursor (`~/.cursor/mcp.json` или `.cursor/mcp.json`)
 
@@ -70,8 +66,7 @@ echo "$REPO"
 {
   "mcpServers": {
     "dev-tools": {
-      "command": "<REPO>/.venv/bin/python",
-      "args": ["<REPO>/server.py"]
+      "command": "<REPO>/bin/mcp-server"
     }
   }
 }
@@ -81,8 +76,7 @@ echo "$REPO"
 
 ```toml
 [mcp_servers.dev-tools]
-command = "<REPO>/.venv/bin/python"
-args = ["<REPO>/server.py"]
+command = "<REPO>/bin/mcp-server"
 ```
 
 ### Zed (`settings.json`)
@@ -92,8 +86,7 @@ args = ["<REPO>/server.py"]
   "context_servers": {
     "dev-tools": {
       "source": "custom",
-      "command": "<REPO>/.venv/bin/python",
-      "args": ["<REPO>/server.py"]
+      "command": "<REPO>/bin/mcp-server"
     }
   }
 }
@@ -101,17 +94,16 @@ args = ["<REPO>/server.py"]
 
 После правки - перезапуск MCP / агента. В UI должны появиться tools ниже.
 
-**Safety:** write-tools по умолчанию `dry_run=true`. Реальная запись только при `dry_run=false` после явного подтверждения в чате. Токены не в чат - в env-файлах.
+**Safety:** write-tools по умолчанию `dry_run=true`. Реальная запись только при `dry_run=false` после явного подтверждения в чате. Токены не в чат - в `.env`.
 
 ## Env / secrets
 
-Все креды и machine-specific layout - в [`config/`](config/README.md). Примеры коммитятся как `*.example*`; рабочие файлы в `.gitignore`.
+Креды - в корневом [`.env.example`](.env.example) → `.env` / `.env.local`. Layout проектов - в `.workspace.yaml` у workspace (см. [config/README.md](config/README.md)).
 
 ```bash
-cp config/tracker.env.example config/tracker.env
-cp config/gitlab.env.example config/gitlab.env
-chmod 600 config/tracker.env config/gitlab.env
-# заполнить токены
+cp .env.example .env
+chmod 600 .env
+# заполнить токены; overrides → .env.local
 
 cp config/workspace.example.yaml /path/to/workspace/.workspace.yaml
 # относительные пути к репам + sandbox components
@@ -119,16 +111,13 @@ cp config/workspace.example.yaml /path/to/workspace/.workspace.yaml
 
 | Файл | Назначение |
 |------|------------|
-| `config/tracker.env` | Yandex Tracker API |
-| `config/gitlab.env` | GitLab API |
+| `.env` / `.env.local` | Tracker + GitLab API |
 | `<workspace>/.workspace.yaml` | layout реп + sandbox (discovery от cwd) |
 | `config/workspace.example.yaml` | пример манифеста |
 | `~/.local/state/mcp-tools/tracker-time.json` | локальный timer state (не в git) |
 
 Минимум Tracker: `TRACKER_OAUTH_TOKEN`, `TRACKER_ORG_ID` или `TRACKER_CLOUD_ORG_ID`.  
 Минимум GitLab: `GITLAB_BASE_URL`, `GITLAB_TOKEN`.
-
-Креды - в `config/*.env`. Layout проектов - в `.workspace.yaml` у workspace (см. [config/README.md](config/README.md)).
 
 ## Tools
 
@@ -222,10 +211,9 @@ MR note или line discussion в GitLab.
 
 - [ ] Вынести жёстко зашитые имена веток (`master`/`main`/`dev`, ForbiddenTaskBranches, AllowedWorkBases, литерал push `dev`) в конфиг / `.workspace.yaml`, чтобы не править код под другой branching model
 
-## Отложено (фаза 5)
+## Отложено
 
-- `gitlab-mr-reviewer` - оркестратор поверх GitLab MCP + codeStyle
-- отдельный codestyle skill/MCP
+- `gitlab-mr-reviewer` + codeStyle - одним приёмом из `~/.codex/skills`
 
 См. [TODO.md](TODO.md).
 

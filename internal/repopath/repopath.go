@@ -8,7 +8,7 @@ import (
 )
 
 // Root ищет корень mcp-tools: поднимается вверх от бинаря и от cwd,
-// пока не найдёт go.mod или server.py.
+// пока не найдёт go.mod.
 func Root() (string, error) {
 	seen := map[string]struct{}{}
 	var starts []string
@@ -32,7 +32,7 @@ func Root() (string, error) {
 				break
 			}
 			seen[dir] = struct{}{}
-			if markerExists(dir) {
+			if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
 				return dir, nil
 			}
 			parent := filepath.Dir(dir)
@@ -41,16 +41,7 @@ func Root() (string, error) {
 			}
 		}
 	}
-	return "", fmt.Errorf("mcp-tools корень не найден (скрипты go.mod или server.py)")
-}
-
-func markerExists(dir string) bool {
-	for _, name := range []string{"go.mod", "server.py"} {
-		if _, err := os.Stat(filepath.Join(dir, name)); err == nil {
-			return true
-		}
-	}
-	return false
+	return "", fmt.Errorf("mcp-tools корень не найден (нужен go.mod)")
 }
 
 // EnvDir - каталог с .env / .env.local (корень mcp-tools).

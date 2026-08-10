@@ -1,8 +1,8 @@
 # Local configuration (not committed)
 
-## Credentials (Go: `.env` + `.env.local`)
+## Credentials (`.env` + `.env.local`)
 
-Go-тулы грузят из корня репо: обязательный `.env`, опциональный `.env.local` (перекрывает ключи).
+Все Go-тулы и MCP грузят креды из корня репо: обязательный `.env`, опциональный `.env.local` (перекрывает ключи).
 
 ```bash
 cp .env.example .env
@@ -10,22 +10,10 @@ chmod 600 .env
 # fill tokens; overrides → .env.local
 ```
 
-## Credentials (Python skills: `config/*.env`)
-
-Пока Python-скрипты ещё читают отдельные файлы:
-
-```bash
-cp config/tracker.env.example config/tracker.env
-cp config/gitlab.env.example config/gitlab.env
-chmod 600 config/tracker.env config/gitlab.env
-# fill tokens
-```
-
 | File | Used by |
 |------|---------|
-| `.env` / `.env.local` | Go CLI (Tracker + GitLab MR comment) |
-| `config/tracker.env` | (legacy) если ещё нужен Python |
-| `config/gitlab.env` | (legacy) если ещё нужен Python |
+| `.env` / `.env.local` | Tracker + GitLab CLI / MCP |
+| `config/tracker.env` / `config/gitlab.env` | legacy leftovers (игнорируются git); не используются кодом |
 
 ## Workspace layout (`.workspace.yaml`)
 
@@ -41,8 +29,8 @@ Discovery: tools walk up from `--cwd` until they find `.workspace.yaml`.
 Migrate from legacy central JSON (if you still have local `config/projects-*.json` + `sandboxes.json`):
 
 ```bash
-.venv/bin/python scripts/migrate_central_config_to_workspace.py          # dry-run
-.venv/bin/python scripts/migrate_central_config_to_workspace.py --write   # create files
+python3 scripts/migrate_central_config_to_workspace.py          # dry-run (needs PyYAML)
+python3 scripts/migrate_central_config_to_workspace.py --write   # create files
 ```
 
 Legacy `config/projects-*.json` / `sandboxes.json` are gitignored and only used by the migrator.

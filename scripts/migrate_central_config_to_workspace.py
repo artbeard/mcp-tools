@@ -13,15 +13,11 @@ from typing import Any
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-	sys.path.insert(0, str(ROOT))
-
-from mcp_paths import (  # noqa: E402
-	LEGACY_PROJECTS_DEPLOY,
-	LEGACY_PROJECTS_MR,
-	LEGACY_PROJECTS_PREPARE,
-	LEGACY_SANDBOXES,
-)
+CONFIG_DIR = ROOT / "config"
+LEGACY_PROJECTS_PREPARE = CONFIG_DIR / "projects-prepare.json"
+LEGACY_PROJECTS_MR = CONFIG_DIR / "projects-mr.json"
+LEGACY_PROJECTS_DEPLOY = CONFIG_DIR / "projects-deploy.json"
+LEGACY_SANDBOXES = CONFIG_DIR / "sandboxes.json"
 
 
 def load_json(path: Path) -> dict[str, Any]:
