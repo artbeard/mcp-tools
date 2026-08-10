@@ -1,5 +1,4 @@
-// Package workspace - загрузка .workspace.yaml (prepare-task / prepare-mr).
-// Sandbox / полный validator - позже.
+// Package workspace - загрузка .workspace.yaml (prepare / MR / deploy / sandbox).
 package workspace
 
 import (
@@ -41,16 +40,33 @@ type Repo struct {
 
 // Manifest - нормализованный манифест (prepare-subset + поля для list).
 type Manifest struct {
-	SchemaVersion         int      // сейчас только 1
-	Name                  string   // ключ проекта (project key)
-	Type                  string   // multi_repo | monorepo
-	Aliases               []string // альтернативные имена для --project
-	Root                  string   // каталог, где лежит .workspace.yaml
-	ManifestPath          string   // полный путь к файлу манифеста
-	ProtectedBaseBranches []string // git.protected_base_branches (master/main)
-	ProtectedBranches     []string // git.protected_branches (для list/MR/deploy)
-	Repositories          []Repo   // список реп с abs path
-	SandboxComponentIDs   []string // id sandbox.components (только для --list)
+	SchemaVersion         int                // сейчас только 1
+	Name                  string             // ключ проекта (project key)
+	Type                  string             // multi_repo | monorepo
+	Aliases               []string           // альтернативные имена для --project
+	Root                  string             // каталог, где лежит .workspace.yaml
+	ManifestPath          string             // полный путь к файлу манифеста
+	ProtectedBaseBranches []string           // git.protected_base_branches (master/main)
+	ProtectedBranches     []string           // git.protected_branches (для list/MR/deploy)
+	Repositories          []Repo             // список реп с abs path
+	SandboxComponents     []SandboxComponent // нормализованные sandbox.components
+	SandboxComponentIDs   []string           // id компонентов (для --list)
+}
+
+// SandboxComponent - нормализованный sandbox.components[] (как Python validate_manifest).
+type SandboxComponent struct {
+	Project              string         // = Manifest.Name
+	Component            string         // id компонента
+	Directory            string         // abs path cwd для start/stop
+	Runtime              string         // compose | tmux (другое → invalid в lifecycle)
+	StartCommand         []string       // nonempty
+	StopCommand          []string       // может быть пустым
+	Probe                map[string]any // type + url для http
+	TimeoutSeconds       int            // default 60
+	Session              string         // tmux session (optional в YAML, нужен для tmux)
+	ComposeFiles         []string       // optional -f для docker compose
+	ComposeServices      []string       // optional expected services
+	RequiredDockerImages []string       // optional docker image inspect
 }
 
 // PrepareProject - адаптер как Python as_prepare_project.
@@ -247,6 +263,13 @@ func AsDeploy(m *Manifest) DeployProject {
 	}
 }
 
+// AsSandbox - компоненты sandbox для lifecycle CLI.
+func AsSandbox(m *Manifest) (string, []SandboxComponent) {
+	comps := make([]SandboxComponent, len(m.SandboxComponents))
+	copy(comps, m.SandboxComponents)
+	return m.Name, comps
+}
+
 // ListPayload - JSON для --list (+ push_allowed добавляет CLI).
 func ListPayload(m *Manifest) map[string]any {
 	repos := make([]map[string]any, 0, len(m.Repositories))
@@ -425,27 +448,9 @@ func parseManifest(data map[string]any, root, manifestPath string) (*Manifest, e
 		})
 	}
 
-	// sandbox: только id для --list, без строгой валидации
-	var sandboxIDs []string
-	if sb, ok := data["sandbox"].(map[string]any); ok {
-		if comps, ok := sb["components"].([]any); ok {
-			for _, c := range comps {
-				cm, ok := c.(map[string]any)
-				if !ok {
-					continue
-				}
-				idSrc := cm["id"]
-				if idSrc == nil {
-					idSrc = cm["component"]
-				}
-				if s, ok := idSrc.(string); ok && strings.TrimSpace(s) != "" {
-					sandboxIDs = append(sandboxIDs, strings.TrimSpace(s))
-				}
-			}
-		}
-	}
-	if sandboxIDs == nil {
-		sandboxIDs = []string{}
+	sandboxComps, sandboxIDs, err := parseSandbox(data, name, rootAbsOr(root), repos)
+	if err != nil {
+		return nil, err
 	}
 	if aliases == nil {
 		aliases = []string{}
@@ -463,8 +468,182 @@ func parseManifest(data map[string]any, root, manifestPath string) (*Manifest, e
 		ProtectedBaseBranches: protectedBase,
 		ProtectedBranches:     protected,
 		Repositories:          repos,
+		SandboxComponents:     sandboxComps,
 		SandboxComponentIDs:   sandboxIDs,
 	}, nil
+}
+
+func rootAbsOr(root string) string {
+	abs, err := filepath.Abs(root)
+	if err != nil {
+		return root
+	}
+	return abs
+}
+
+func parseSandbox(data map[string]any, projectName, root string, repos []Repo) ([]SandboxComponent, []string, error) {
+	rawSandbox := data["sandbox"]
+	if rawSandbox == nil {
+		return []SandboxComponent{}, []string{}, nil
+	}
+	sb, ok := rawSandbox.(map[string]any)
+	if !ok {
+		return nil, nil, errf("sandbox должен быть словарём")
+	}
+	compsRaw := sb["components"]
+	if compsRaw == nil {
+		return []SandboxComponent{}, []string{}, nil
+	}
+	arr, ok := compsRaw.([]any)
+	if !ok {
+		return nil, nil, errf("sandbox.components: нужен список")
+	}
+
+	repoByID := map[string]Repo{}
+	for _, r := range repos {
+		repoByID[r.ID] = r
+	}
+
+	seen := map[string]struct{}{}
+	comps := make([]SandboxComponent, 0, len(arr))
+	ids := make([]string, 0, len(arr))
+	for i, raw := range arr {
+		cm, ok := raw.(map[string]any)
+		if !ok {
+			return nil, nil, errf("sandbox.components[%d]: должен быть словарь", i)
+		}
+		idSrc := cm["id"]
+		if idSrc == nil {
+			idSrc = cm["component"]
+		}
+		compID, err := requireStr(idSrc, fmt.Sprintf("sandbox.components[%d].id", i))
+		if err != nil {
+			return nil, nil, err
+		}
+		if _, dup := seen[compID]; dup {
+			return nil, nil, errf("дублируется id sandbox-компонента: %s", compID)
+		}
+		seen[compID] = struct{}{}
+
+		directoryRel := "."
+		if cm["directory"] != nil {
+			directoryRel, err = requireStr(cm["directory"], fmt.Sprintf("sandbox.components[%d].directory", i))
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+		baseDir := root
+		if cm["repository"] != nil {
+			repoRef, err := requireStr(cm["repository"], fmt.Sprintf("sandbox.components[%d].repository", i))
+			if err != nil {
+				return nil, nil, err
+			}
+			repo, ok := repoByID[repoRef]
+			if !ok {
+				return nil, nil, errf("sandbox.components[%d].repository неизвестен: %s", i, repoRef)
+			}
+			baseDir = repo.Path
+		}
+		absDir, err := filepath.Abs(filepath.Join(baseDir, directoryRel))
+		if err != nil {
+			return nil, nil, err
+		}
+
+		runtime, err := requireStr(cm["runtime"], fmt.Sprintf("sandbox.components[%d].runtime", i))
+		if err != nil {
+			return nil, nil, err
+		}
+		startCmd, err := stringList(cm["start_command"], fmt.Sprintf("sandbox.components[%d].start_command", i), false)
+		if err != nil {
+			return nil, nil, err
+		}
+		if len(startCmd) == 0 {
+			return nil, nil, errf("sandbox.components[%d].start_command: нужен непустой список строк", i)
+		}
+		stopCmd, err := stringList(cm["stop_command"], fmt.Sprintf("sandbox.components[%d].stop_command", i), false)
+		if err != nil {
+			return nil, nil, err
+		}
+		if stopCmd == nil {
+			stopCmd = []string{}
+		}
+		probeRaw, ok := cm["probe"].(map[string]any)
+		if !ok {
+			return nil, nil, errf("sandbox.components[%d].probe: нужен словарь", i)
+		}
+		probe := map[string]any{}
+		for k, v := range probeRaw {
+			probe[k] = v
+		}
+		timeout := 60
+		if cm["timeout_seconds"] != nil {
+			timeout, err = requirePositiveInt(cm["timeout_seconds"], fmt.Sprintf("sandbox.components[%d].timeout_seconds", i))
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+
+		item := SandboxComponent{
+			Project:        projectName,
+			Component:      compID,
+			Directory:      absDir,
+			Runtime:        runtime,
+			StartCommand:   startCmd,
+			StopCommand:    stopCmd,
+			Probe:          probe,
+			TimeoutSeconds: timeout,
+		}
+		if cm["session"] != nil {
+			s, err := requireStr(cm["session"], fmt.Sprintf("sandbox.components[%d].session", i))
+			if err != nil {
+				return nil, nil, err
+			}
+			item.Session = s
+		}
+		if cm["compose_files"] != nil {
+			item.ComposeFiles, err = stringList(cm["compose_files"], fmt.Sprintf("sandbox.components[%d].compose_files", i), false)
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+		if cm["compose_services"] != nil {
+			item.ComposeServices, err = stringList(cm["compose_services"], fmt.Sprintf("sandbox.components[%d].compose_services", i), false)
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+		if cm["required_docker_images"] != nil {
+			item.RequiredDockerImages, err = stringList(cm["required_docker_images"], fmt.Sprintf("sandbox.components[%d].required_docker_images", i), false)
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+		comps = append(comps, item)
+		ids = append(ids, compID)
+	}
+	return comps, ids, nil
+}
+
+func requirePositiveInt(v any, field string) (int, error) {
+	switch n := v.(type) {
+	case int:
+		if n <= 0 {
+			return 0, errf("%s: нужно положительное целое", field)
+		}
+		return n, nil
+	case int64:
+		if n <= 0 {
+			return 0, errf("%s: нужно положительное целое", field)
+		}
+		return int(n), nil
+	case float64:
+		if n != float64(int(n)) || n <= 0 {
+			return 0, errf("%s: нужно положительное целое", field)
+		}
+		return int(n), nil
+	default:
+		return 0, errf("%s: нужно положительное целое", field)
+	}
 }
 
 func requireStr(v any, field string) (string, error) {

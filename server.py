@@ -122,6 +122,13 @@ def _deploy_task_cmd() -> list[str]:
     return ["go", "run", "./skills/deploy-project-task-to-dev/cmd/deploy-task"]
 
 
+def _start_sandbox_cmd() -> list[str]:
+    binary = ROOT / "bin" / "start-sandbox"
+    if binary.is_file() and os.access(binary, os.X_OK):
+        return [str(binary)]
+    return ["go", "run", "./skills/start-project-sandbox/cmd/start-sandbox"]
+
+
 def _write_temp(text: str, suffix: str = ".txt") -> Path:
     handle = tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=suffix, delete=False)
     handle.write(text)
@@ -159,8 +166,7 @@ def start_project_sandbox(
     cwd: str | None = None,
     manifest: str | None = None,
 ) -> str:
-    """action: list | check | status | start | stop | diagnose."""
-    script = SKILLS / "start-project-sandbox" / "scripts" / "start_sandbox.py"
+    # Go CLI start-sandbox
     action = action.strip().lower()
     allowed = {"list", "check", "status", "start", "stop", "diagnose"}
     if action not in allowed:
@@ -170,7 +176,7 @@ def start_project_sandbox(
         args.append(project)
     args.extend(_opt("--cwd", cwd))
     args.extend(_opt("--manifest", manifest))
-    return _run(script, args, cwd=cwd)
+    return _run(Path(), args, command=_start_sandbox_cmd(), cwd=cwd)
 
 
 # --- prepare-project-task ---

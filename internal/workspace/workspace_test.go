@@ -175,3 +175,70 @@ git:
 		t.Fatalf("%#v", p)
 	}
 }
+
+// sandbox: duplicate / unknown repo / abs path.
+func TestSandboxParse(t *testing.T) {
+	root := t.TempDir()
+	_ = os.MkdirAll(filepath.Join(root, "app"), 0o755)
+	writeManifest(t, root, `
+schema_version: 1
+name: sb
+type: monorepo
+repositories:
+  - id: app
+    path: app
+git:
+  protected_base_branches: [master, main]
+  protected_branches: [master, main, dev]
+sandbox:
+  components:
+    - id: fe
+      repository: app
+      directory: .
+      runtime: tmux
+      session: sb-fe
+      start_command: [echo, hi]
+      stop_command: []
+      probe: {type: http, url: http://127.0.0.1:1/}
+      timeout_seconds: 30
+`)
+	m, err := workspace.Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(m.SandboxComponents) != 1 || m.SandboxComponents[0].Component != "fe" {
+		t.Fatalf("%#v", m.SandboxComponents)
+	}
+	if !filepath.IsAbs(m.SandboxComponents[0].Directory) {
+		t.Fatalf("dir not abs: %s", m.SandboxComponents[0].Directory)
+	}
+	name, comps := workspace.AsSandbox(m)
+	if name != "sb" || len(comps) != 1 {
+		t.Fatalf("%s %#v", name, comps)
+	}
+
+	bad := t.TempDir()
+	writeManifest(t, bad, `
+schema_version: 1
+name: bad-sb
+type: monorepo
+repositories:
+  - id: app
+    path: .
+sandbox:
+  components:
+    - id: a
+      runtime: tmux
+      start_command: [echo]
+      stop_command: []
+      probe: {type: compose}
+    - id: a
+      runtime: tmux
+      start_command: [echo]
+      stop_command: []
+      probe: {type: compose}
+`)
+	if _, err := workspace.Load(bad); err == nil {
+		t.Fatal("expected duplicate id")
+	}
+}

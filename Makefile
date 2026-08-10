@@ -1,7 +1,7 @@
-.PHONY: build build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-prepare-task build-prepare-mr build-deploy-task test-go
+.PHONY: build build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-prepare-task build-prepare-mr build-deploy-task build-start-sandbox test-go
 
 # Собрать все Go CLI в bin/
-build: build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-prepare-task build-prepare-mr build-deploy-task
+build: build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-prepare-task build-prepare-mr build-deploy-task build-start-sandbox
 
 # Смена статуса задачи → bin/tracker-transition
 build-tracker-transition:
@@ -42,6 +42,11 @@ build-prepare-mr:
 build-deploy-task:
 	mkdir -p bin
 	go build -o bin/deploy-task ./skills/deploy-project-task-to-dev/cmd/deploy-task
+
+# Sandbox compose/tmux lifecycle → bin/start-sandbox
+build-start-sandbox:
+	mkdir -p bin
+	go build -o bin/start-sandbox ./skills/start-project-sandbox/cmd/start-sandbox
 
 # Прогнать все Go-тесты
 test-go:
