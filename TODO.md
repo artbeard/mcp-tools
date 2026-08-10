@@ -15,11 +15,11 @@
 | `abcage-tracker-commenter` | `yandex-tracker-commenter` | `yandex_tracker_comment` / `yandex_tracker_transition` | Go |
 | `abcage-mr-commenter` | `gitlab-mr-commenter` | `gitlab_mr_comment` | Go |
 | codeStyle (корп. MCP hub) | `codestyle` | `codestyle_find_rules` / `codestyle_read_rule` | Go (анонимизированный snapshot) |
-| `abcage-mr-reviewer` | `gitlab-mr-reviewer` | - | **не в репо** (остался в `~/.codex/skills`) |
+| `abcage-mr-reviewer` | `gitlab-mr-reviewer` | `gitlab_mr_context` | Go (skill + context CLI; ревью в SKILL) |
 
 ## Ещё не перенесено
 
-- [ ] `abcage-mr-reviewer` → `gitlab-mr-reviewer` (оркестратор ревью MR; будет звать `codestyle_*`)
+- (нет)
 
 ## Go: уже перенесено
 
@@ -28,6 +28,7 @@
 - [x] `tracker-create-issue` → `bin/tracker-create-issue`
 - [x] `tracker-time` → `bin/tracker-time`
 - [x] `gitlab-mr-comment` → `bin/gitlab-mr-comment`
+- [x] `gitlab-mr-context` → `bin/gitlab-mr-context`
 - [x] `prepare-task` → `bin/prepare-task`
 - [x] `prepare-mr` → `bin/prepare-mr`
 - [x] `deploy-task` → `bin/deploy-task`
@@ -44,10 +45,6 @@
 - [x] Манифест workspace на Go (`internal/workspace`)
 - [x] Codestyle: анонимизация + offline Go tools
 - [ ] Вынести жёстко зашитые имена веток (`master`/`main`/`dev`) в конфиг / `.workspace.yaml`
-
-## Отложено
-
-- [ ] `gitlab-mr-reviewer` (оркестратор поверх GitLab + локальный `codestyle_*`)
 
 ## Follow-up: `.workspace.yaml`
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "GitLab MR Reviewer"
+  short_description: "Детерминированное ревью GitLab MR (SKIP/FINDINGS)"
+  default_prompt: "Используй $gitlab-mr-reviewer, чтобы проверить ссылку на GitLab merge request и вернуть SKIP или FINDINGS."

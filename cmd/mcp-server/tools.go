@@ -125,6 +125,15 @@ func registerTools(s *server.MCPServer) {
 		mcp.WithString("env_dir", mcp.Description("каталог с .env / .env.local")),
 	), handleGitLabMRComment)
 
+	// skills/gitlab-mr-reviewer — только факты MR (без суждений ревью).
+	s.AddTool(mcp.NewTool("gitlab_mr_context",
+		mcp.WithDescription("Читает контекст GitLab MR: metadata, changes/diffs, commits, discussions/notes. Не делает ревью - только JSON для skill gitlab-mr-reviewer."),
+		mcp.WithString("mr_url", mcp.Required(), mcp.Description("URL merge request в GitLab")),
+		mcp.WithString("author_filter", mcp.Description("CSV username/name/email/id для фильтра notes; пусто = все (или GITLAB_MR_AUTHOR_FILTER)")),
+		mcp.WithBoolean("parse_only", mcp.Description("только разобрать URL без API"), mcp.DefaultBool(false)),
+		mcp.WithString("env_dir", mcp.Description("каталог с .env / .env.local")),
+	), handleGitLabMRContext)
+
 	// skills/codestyle — поиск релевантных правил по описанию задачи.
 	s.AddTool(mcp.NewTool("codestyle_find_rules",
 		mcp.WithDescription("Ищет правила кодстайла (PHP/Symfony + Vue/TS) по описанию задачи. Вернёт URI + priority + summary; затем читай critical через codestyle_read_rule. Не пиши код «по памяти»."),
@@ -439,6 +448,21 @@ func handleGitLabMRComment(_ context.Context, req mcp.CallToolRequest) (*mcp.Cal
 		args = append(args, "--send", "--confirm-send")
 	}
 	return textResult(runCLI(resolveCmd("gitlab-mr-comment", "./skills/gitlab-mr-commenter/cmd/gitlab-mr-comment"), args, "")), nil
+}
+
+func handleGitLabMRContext(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mrURL := req.GetString("mr_url", "")
+	authorFilter := req.GetString("author_filter", "")
+	parseOnly := req.GetBool("parse_only", false)
+	envDir := req.GetString("env_dir", "")
+
+	args := []string{"--mr-url", mrURL}
+	args = append(args, optFlag("--author-filter", authorFilter)...)
+	args = append(args, optFlag("--env-dir", envDir)...)
+	if parseOnly {
+		args = append(args, "--parse-only")
+	}
+	return textResult(runCLI(resolveCmd("gitlab-mr-context", "./skills/gitlab-mr-reviewer/cmd/gitlab-mr-context"), args, "")), nil
 }
 
 func handleCodestyleFindRules(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {

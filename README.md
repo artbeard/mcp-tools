@@ -192,7 +192,7 @@ Merge task → `dev` и push только `origin/dev`.
 - **Зачем:** опубликовать комментарий / сделать transition.
 - **Параметры:** `issue_key`, `body` / `target`; `dry_run=true` по умолчанию.
 - **Env:** `.env` / `.env.local` в корне mcp-tools
-- **CLI (Go):** `make build` → `bin/tracker-*`, `bin/gitlab-mr-comment`
+- **CLI (Go):** `make build` → `bin/tracker-*`, `bin/gitlab-mr-comment`, `bin/gitlab-mr-context`
 
 ### `gitlab_mr_comment`
 
@@ -202,6 +202,15 @@ MR note или line discussion в GitLab.
 - **Параметры:** `mr_url`, `body`; `line_comment` + `file_path`/`line`/`line_type` для discussion; `dry_run=true` по умолчанию.
 - **Env:** `.env` / `.env.local` (`GITLAB_TOKEN`)
 - **CLI (Go):** `make build-gitlab-mr-comment` → `./bin/gitlab-mr-comment`
+
+### `gitlab_mr_context`
+
+JSON-контекст MR для skill `gitlab-mr-reviewer` (metadata, diffs, commits, discussions/notes). Ревью (SKIP/FINDINGS) делает агент по SKILL, не этот tool.
+
+- **Зачем:** один bundle фактов перед ревью.
+- **Параметры:** `mr_url`; опционально `author_filter` (CSV), `parse_only`, `env_dir`.
+- **Env:** `.env` / `.env.local` (`GITLAB_TOKEN`, опционально `GITLAB_MR_AUTHOR_FILTER`)
+- **CLI (Go):** `make build-gitlab-mr-context` → `./bin/gitlab-mr-context --mr-url URL`
 
 ### `codestyle_find_rules` / `codestyle_read_rule`
 
@@ -256,12 +265,6 @@ make build-codestyle
 См. также полный список в [TODO.md](TODO.md).
 
 - [ ] Вынести жёстко зашитые имена веток (`master`/`main`/`dev`, ForbiddenTaskBranches, AllowedWorkBases, литерал push `dev`) в конфиг / `.workspace.yaml`, чтобы не править код под другой branching model
-
-## Отложено
-
-- `gitlab-mr-reviewer` — оркестратор MR (будет звать локальный `codestyle_*`)
-
-См. [TODO.md](TODO.md).
 
 ## Детали workflow
 

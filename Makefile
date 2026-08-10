@@ -1,7 +1,7 @@
-.PHONY: build build-mcp-server build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-prepare-task build-prepare-mr build-deploy-task build-start-sandbox build-codestyle test-go
+.PHONY: build build-mcp-server build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-gitlab-mr-context build-prepare-task build-prepare-mr build-deploy-task build-start-sandbox build-codestyle test-go
 
 # Собрать MCP-сервер + все Go CLI в bin/
-build: build-mcp-server build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-prepare-task build-prepare-mr build-deploy-task build-start-sandbox build-codestyle
+build: build-mcp-server build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-gitlab-mr-context build-prepare-task build-prepare-mr build-deploy-task build-start-sandbox build-codestyle
 
 # stdio MCP → bin/mcp-server
 build-mcp-server:
@@ -32,6 +32,11 @@ build-tracker-time:
 build-gitlab-mr-comment:
 	mkdir -p bin
 	go build -o bin/gitlab-mr-comment ./skills/gitlab-mr-commenter/cmd/gitlab-mr-comment
+
+# JSON-контекст MR для ревьюера → bin/gitlab-mr-context
+build-gitlab-mr-context:
+	mkdir -p bin
+	go build -o bin/gitlab-mr-context ./skills/gitlab-mr-reviewer/cmd/gitlab-mr-context
 
 # Локальные task-ветки → bin/prepare-task
 build-prepare-task:
