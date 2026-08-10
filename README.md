@@ -19,7 +19,7 @@ mcp-tools/
 ```bash
 git clone <repo-url> mcp-tools
 cd mcp-tools
-make build   # mcp-server + prepare-task/prepare-mr/deploy-task/start-sandbox + tracker-* + gitlab-mr-comment
+make build   # mcp-server + CLI (prepare/deploy/sandbox/tracker/gitlab/codestyle)
 ```
 
 Нужен **Go** (≥ версии из `go.mod`).
@@ -203,6 +203,15 @@ MR note или line discussion в GitLab.
 - **Env:** `.env` / `.env.local` (`GITLAB_TOKEN`)
 - **CLI (Go):** `make build-gitlab-mr-comment` → `./bin/gitlab-mr-comment`
 
+### `codestyle_find_rules` / `codestyle_read_rule`
+
+Правила кодстайла для стека PHP/Symfony + Vue/TS (анонимизированный snapshot в `skills/codestyle/content`).
+
+- **Зачем:** перед кодом на этом стеке найти и прочитать релевантные MUST-правила (не «по памяти»).
+- **Параметры:** `task` (+ `max_results`); затем `uri` вида `codestyle://backend/dto`.
+- **CLI:** `make build-codestyle` → `./bin/codestyle find-rules --task "..."` / `read-rule --uri ...`
+- **Обновление контента:** `make sync-codestyle` (из `CODESTYLE_DOCS_ROOT`, с анонимизацией)
+
 ---
 
 ## TODO
@@ -213,7 +222,7 @@ MR note или line discussion в GitLab.
 
 ## Отложено
 
-- `gitlab-mr-reviewer` + codeStyle - одним приёмом из `~/.codex/skills`
+- `gitlab-mr-reviewer` — оркестратор MR (будет звать локальный `codestyle_*`)
 
 См. [TODO.md](TODO.md).
 
