@@ -13,15 +13,14 @@ chmod 600 .env
 | File | Used by |
 |------|---------|
 | `.env` / `.env.local` | Tracker + GitLab CLI / MCP |
-| `config/tracker.env` / `config/gitlab.env` | legacy leftovers (игнорируются git); не используются кодом |
 
 ## Workspace layout (`.workspace.yaml`)
 
-Project/sandbox layout lives **in each workspace**, not in mcp-tools:
+Layout проектов живёт **в каждом workspace**, не в mcp-tools:
 
 ```bash
 cp config/workspace.example.yaml /path/to/your/workspace/.workspace.yaml
 # edit relative paths / sandbox components
 ```
 
-Discovery: tools walk up from `--cwd` until they find `.workspace.yaml`.
+Discovery: tools ищут `.workspace.yaml` вверх от `--cwd`.

@@ -212,6 +212,43 @@ MR note или line discussion в GitLab.
 - **CLI:** `make build-codestyle` → `./bin/codestyle find-rules --task "..."` / `read-rule --uri ...`
 - **Правила:** править напрямую `skills/codestyle/content/` (`.codestyle/` + `mcp-meta.json`)
 
+### Как добавить правила кодстайла
+
+SoT: `skills/codestyle/content/`.
+
+1. Markdown в категорию:
+   - `skills/codestyle/content/.codestyle/general/`
+   - `skills/codestyle/content/.codestyle/backend/`
+   - `skills/codestyle/content/.codestyle/frontend/`
+   - `skills/codestyle/content/.codestyle/patterns/`
+
+   Пример: `.codestyle/backend/events.md` (MUST/MUST NOT/SHOULD/MAY + примеры).
+
+2. Запись в `skills/codestyle/content/mcp-meta.json` (иначе `find_rules` не найдёт):
+
+```json
+{
+  "file": "events.md",
+  "category": "backend",
+  "tags": ["events", "dispatcher"],
+  "tasks": ["событие Symfony", "event listener"],
+  "priority": "critical",
+  "summary": "Кратко: что MUST соблюдать."
+}
+```
+
+URI: `codestyle://backend/events`.
+
+3. Проверка:
+
+```bash
+make build-codestyle
+./bin/codestyle find-rules --task "событие Symfony listener"
+./bin/codestyle read-rule --uri "codestyle://backend/events"
+```
+
+Опционально ссылку в `.codestyle/<category>/INDEX.md`. Workflow агента: `skills/codestyle/SKILL.md`.
+
 ---
 
 ## TODO
