@@ -14,7 +14,20 @@ A single local MCP process that exposes deterministic tools so an agent can prep
 
 ### Install
 
-Needs **Go** (see `go.mod`).
+**Required to build/run mcp-tools**
+
+| Dependency | Why |
+|------------|-----|
+| **Go** ≥ version in `go.mod` | `make build` |
+| **git** | branch / MR / deploy tools |
+
+**Optional (only if used in `.workspace.yaml` sandbox)**
+
+| Dependency | Why |
+|------------|-----|
+| **tmux** | long-running `tmux` components |
+| **Docker** + Compose plugin | `compose` components |
+| **npm** / **node** | if `start_command` uses them (`npm i` you do in the project) |
 
 ```bash
 git clone <repo-url> mcp-tools
@@ -29,14 +42,11 @@ cp .env.example .env
 cp config/workspace.example.yaml /path/to/your/workspace/.workspace.yaml
 ```
 
-Point the agent at the **absolute** path of `bin/mcp-server` (Cursor `mcp.json`, Codex `config.toml`, or Zed `settings.json`). Details: [README_RU.md](README_RU.md) (Russian, full).
-
 ### Use
 
-- Call tools from the agent UI after MCP is connected (`ping` first).
-- Or run CLIs directly: `./bin/prepare-task --check IT-123`, `./bin/gitlab-mr-context --mr-url …`, etc.
-- Write operations default to dry-run; real writes need explicit confirmation (`dry_run=false`).
-- Full tool list, branch rules, and how to add codestyle rules: [README_RU.md](README_RU.md).
+1. Register MCP in the agent config with the **absolute** path to `bin/mcp-server` (Cursor `~/.cursor/mcp.json`, Codex `~/.codex/config.toml`, Zed `settings.json`), then restart MCP / the agent.
+2. In chat, ask in plain language — e.g. “prepare branches for IT-123”, “open MRs”, “comment on this MR”, “find codestyle for a Symfony DTO”. The agent calls the MCP tools; you confirm before any real write (`dry_run=false`).
+3. Optional: run the same programs from a terminal without an agent (`./bin/prepare-task --check IT-123`, etc.).
 
 ---
 
@@ -48,7 +58,20 @@ Point the agent at the **absolute** path of `bin/mcp-server` (Cursor `mcp.json`,
 
 ### Установка
 
-Нужен **Go** (версия в `go.mod`).
+**Обязательно для сборки и работы mcp-tools**
+
+| Зависимость | Зачем |
+|-------------|--------|
+| **Go** ≥ версии из `go.mod` | `make build` |
+| **git** | tools веток / MR / deploy |
+
+**Опционально (только если есть в sandbox `.workspace.yaml`)**
+
+| Зависимость | Зачем |
+|-------------|--------|
+| **tmux** | долгие процессы в режиме `tmux` |
+| **Docker** + Compose plugin | компоненты `compose` |
+| **npm** / **node** | если `start_command` их вызывает (`npm i` в проекте сам) |
 
 ```bash
 git clone <repo-url> mcp-tools
@@ -63,11 +86,8 @@ cp .env.example .env
 cp config/workspace.example.yaml /path/to/your/workspace/.workspace.yaml
 ```
 
-В агенте укажи **абсолютный** путь к `bin/mcp-server`. Полная инструкция: [README_RU.md](README_RU.md).
-
 ### Использование
 
-- После подключения MCP вызывай tools из UI агента (сначала `ping`).
-- Или CLI напрямую: `./bin/prepare-task --check IT-123`, `./bin/gitlab-mr-context --mr-url …` и т.д.
-- Операции записи по умолчанию в режиме проверки; реальная запись только после явного подтверждения.
-- Список tools, правила веток и как добавлять правила кодстайла: [README_RU.md](README_RU.md).
+1. Пропиши MCP в конфиге агента **абсолютным** путём к `bin/mcp-server` (Cursor `~/.cursor/mcp.json`, Codex `~/.codex/config.toml`, Zed `settings.json`) и перезапусти MCP / агента. Примеры конфигов: [README_RU.md](README_RU.md).
+2. В чате пиши обычным языком — «подготовь ветки IT-123», «открой MR», «прокомментируй MR», «найди правила для Symfony DTO». Агент сам вызовет MCP tools; перед реальной записью подтверди (`dry_run=false`).
+3. Без агента те же программы можно гонять из терминала (`./bin/prepare-task --check IT-123` и т.д.). Полный список tools: [README_RU.md](README_RU.md).
