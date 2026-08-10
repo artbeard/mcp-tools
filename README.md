@@ -26,11 +26,32 @@ uv venv .venv
 uv pip install --python .venv/bin/python -r requirements.txt
 ```
 
-Проверка:
+Нужен **Go** (для сборки CLI в `bin/`):
+
+```bash
+make build   # prepare-task, prepare-mr, deploy-task, start-sandbox, tracker-*, gitlab-mr-comment
+```
+
+Проверка MCP:
 
 ```bash
 .venv/bin/python -c "from server import mcp; print('ok', mcp.name)"
 ```
+
+### Зависимости хоста (sandbox и команды из манифеста)
+
+`start-sandbox` **не ставит** Node/Docker/пакеты проекта. Он запускает `start_command` / `stop_command` из `.workspace.yaml` и проверяет, что первый бинарь есть в `PATH`. Что нужно на машине - зависит от твоих `sandbox.components`:
+
+| Инструмент | Зачем |
+|------------|--------|
+| **tmux** | runtime `tmux`: сессии для long-running процессов (типа `npm run dev`) |
+| **Docker** + Compose plugin | runtime `compose`: `docker compose up/down`, inspect образов |
+| **npm** / **node** | если в манифесте `start_command: [npm, run, ...]`; сами `node_modules` ставишь в проекте (`npm i`), скилл этого не делает |
+| любой другой бинарь из `start_command[0]` | то же правило: должен быть в `PATH` до `--start` |
+
+Пример из [`config/workspace.example.yaml`](config/workspace.example.yaml): backend → docker compose; frontend → `npm run dev` в tmux + HTTP probe. Без `tmux`/`npm`/`docker` validate упадёт с «исполняемый файл недоступен».
+
+Остальные tools (Tracker/GitLab/git) используют системный **git** и креды из `.env` / `.env.local` (см. ниже).
 
 В конфигах агентов нужен **абсолютный** путь к клону (хосты обычно не резолвят `~` в `command`/`args`). Подставь свой:
 
@@ -119,10 +140,10 @@ Health-check сервера.
 
 Старт/стоп/статус песочницы проекта (`skills/start-project-sandbox`).
 
-- **Зачем:** lifecycle sandbox (docker/tmux/процессы) с readiness.
+- **Зачем:** lifecycle sandbox (docker/tmux) с readiness.
 - **Параметры:** `action` = `list|check|status|start|stop|diagnose`; `project` опционален (name/alias манифеста); `cwd` / `manifest`.
 - **Конфиг:** `.workspace.yaml` (sandbox.components); discovery от `cwd` / `--manifest`.
-- **Запуск CLI:** `python skills/start-project-sandbox/scripts/start_sandbox.py --status --cwd /path/to/workspace`
+- **CLI (Go):** `make build-start-sandbox` → `./bin/start-sandbox --status`
 
 ### `prepare_project_task`
 

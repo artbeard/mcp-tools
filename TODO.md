@@ -6,7 +6,7 @@
 
 | Было (`~/.codex/skills`) | Стало | MCP | Статус |
 |--------------------------|-------|-----|--------|
-| `start-project-sandbox` | `start-project-sandbox` | `start_project_sandbox` | в репо (Python) |
+| `start-project-sandbox` | `start-project-sandbox` | `start_project_sandbox` | Go |
 | `prepare-project-task` | `prepare-project-task` | `prepare_project_task` | Go |
 | `prepare-project-merge-requests` | `prepare-project-merge-requests` | `prepare_project_merge_requests` | Go |
 | `deploy-project-task-to-dev` | `deploy-project-task-to-dev` | `deploy_project_task_to_dev` | Go |
@@ -34,18 +34,17 @@
 - [x] `prepare-task` → `bin/prepare-task`
 - [x] `prepare-mr` → `bin/prepare-mr`
 - [x] `deploy-task` → `bin/deploy-task`
-- [x] общие пакеты: `internal/envfile` (`.env` + `.env.local`), `internal/tracker`, `internal/gitlab`, `internal/timerstate`, `internal/repopath`, `internal/workspace`, `internal/gitcmd`
+- [x] `start-sandbox` → `bin/start-sandbox`
+- [x] общие пакеты: `internal/envfile` (`.env` + `.env.local`), `internal/tracker`, `internal/gitlab`, `internal/timerstate`, `internal/repopath`, `internal/workspace`, `internal/gitcmd`, `internal/sandbox`
 
 ## Go: осталось перенести
 
-Локальный git / sandbox. Пока Python под `skills/*/scripts/`.
+Все git/sandbox CLI на Go. Cleanup ниже.
 
 - [x] `prepare-project-task` → `bin/prepare-task`
 - [x] `prepare-project-merge-requests` → `bin/prepare-mr`
 - [x] `deploy-project-task-to-dev` → `bin/deploy-task`
-- [ ] `start-project-sandbox` (`start_sandbox.py`) - docker/tmux/process lifecycle
-
-Порядок дальше: sandbox.
+- [x] `start-project-sandbox` → `bin/start-sandbox`
 
 ## После порта git-скиллов (cleanup)
 
