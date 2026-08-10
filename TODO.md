@@ -14,15 +14,12 @@
 | `abcage-tracker-issue-creator` | `yandex-tracker-issue-creator` | `yandex_tracker_issue_creator` | Go |
 | `abcage-tracker-commenter` | `yandex-tracker-commenter` | `yandex_tracker_comment` / `yandex_tracker_transition` | Go |
 | `abcage-mr-commenter` | `gitlab-mr-commenter` | `gitlab_mr_comment` | Go |
+| codeStyle (корп. MCP hub) | `codestyle` | `codestyle_find_rules` / `codestyle_read_rule` | Go (анонимизированный snapshot) |
 | `abcage-mr-reviewer` | `gitlab-mr-reviewer` | - | **не в репо** (остался в `~/.codex/skills`) |
-| codeStyle / правила ревью (внутри reviewer) | отдельный skill/MCP или часть reviewer | - | **не в репо** |
 
-## Ещё не перенесено из оригинальных скиллов
+## Ещё не перенесено
 
-Даже как пакет в `skills/` - пока только в `~/.codex/skills` (перенос одним приёмом позже):
-
-- [ ] `abcage-mr-reviewer` → `gitlab-mr-reviewer` (оркестратор ревью MR)
-- [ ] **кодстайл / codeStyle** - правила и чеклисты из `abcage-mr-reviewer/references/` (и связанный стиль ревью); отдельный skill/MCP или часть reviewer
+- [ ] `abcage-mr-reviewer` → `gitlab-mr-reviewer` (оркестратор ревью MR; будет звать `codestyle_*`)
 
 ## Go: уже перенесено
 
@@ -35,25 +32,25 @@
 - [x] `prepare-mr` → `bin/prepare-mr`
 - [x] `deploy-task` → `bin/deploy-task`
 - [x] `start-sandbox` → `bin/start-sandbox`
+- [x] `codestyle` → `bin/codestyle`
 - [x] MCP-сервер → `bin/mcp-server` (`cmd/mcp-server`)
-- [x] общие пакеты: `internal/envfile` (`.env` + `.env.local`), `internal/tracker`, `internal/gitlab`, `internal/timerstate`, `internal/repopath`, `internal/workspace`, `internal/gitcmd`, `internal/sandbox`
+- [x] общие пакеты: `internal/envfile`, `internal/tracker`, `internal/gitlab`, `internal/timerstate`, `internal/repopath`, `internal/workspace`, `internal/gitcmd`, `internal/sandbox`, `internal/codestyle`
 
 ## Cleanup
 
-- [x] Один источник кредов: корневой `.env` / `.env.local` (legacy `config/*.env` не читается)
-- [x] README без Python MCP / `config/*.env` как primary
-- [x] Runtime Python убран (`server.py`, `workspace_manifest.py`, `mcp_paths.py`, `requirements.txt`)
-- [x] Манифест workspace на Go (`internal/workspace`); `scripts/migrate_*.py` оставлен как one-shot для legacy JSON
-- [ ] Вынести жёстко зашитые имена веток (`master`/`main`/`dev`, ForbiddenTaskBranches, AllowedWorkBases, литерал push `dev`) в конфиг / `.workspace.yaml`
+- [x] Один источник кредов: корневой `.env` / `.env.local`
+- [x] README без Python MCP
+- [x] Runtime Python убран
+- [x] Манифест workspace на Go (`internal/workspace`)
+- [x] Codestyle: анонимизация + offline Go tools
+- [ ] Вынести жёстко зашитые имена веток (`master`/`main`/`dev`) в конфиг / `.workspace.yaml`
 
 ## Отложено
 
-- [ ] `gitlab-mr-reviewer` + **кодстайл** (см. секцию выше - сначала занести в репо из `~/.codex/skills`, одним приёмом)
+- [ ] `gitlab-mr-reviewer` (оркестратор поверх GitLab + локальный `codestyle_*`)
 
 ## Follow-up: `.workspace.yaml`
 
 - [x] loader Go `internal/workspace`
 - [x] prepare / mr / deploy / sandbox на манифест
 - [x] `config/workspace.example.yaml`
-- [x] `scripts/migrate_central_config_to_workspace.py` (опциональный one-shot)
-- Локально (если ещё есть `config/projects-*.json`): `python3 scripts/migrate_central_config_to_workspace.py --write`

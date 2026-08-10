@@ -9,12 +9,9 @@ __pycache__/
 !.env.example
 *.pem
 
-# Legacy local config (больше не используются кодом; migrator читает JSON)
+# Legacy local config (не используются кодом)
 config/tracker.env
 config/gitlab.env
-config/projects-prepare.json
-config/projects-mr.json
-config/projects-deploy.json
 config/sandboxes.json
 
 # OS / editor

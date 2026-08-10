@@ -25,12 +25,3 @@ cp config/workspace.example.yaml /path/to/your/workspace/.workspace.yaml
 ```
 
 Discovery: tools walk up from `--cwd` until they find `.workspace.yaml`.
-
-Migrate from legacy central JSON (if you still have local `config/projects-*.json` + `sandboxes.json`):
-
-```bash
-python3 scripts/migrate_central_config_to_workspace.py          # dry-run (needs PyYAML)
-python3 scripts/migrate_central_config_to_workspace.py --write   # create files
-```
-
-Legacy `config/projects-*.json` / `sandboxes.json` are gitignored and only used by the migrator.

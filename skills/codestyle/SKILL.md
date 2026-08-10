@@ -28,12 +28,6 @@ make build-codestyle
 ./bin/codestyle list
 ```
 
-Обновление контента из локального SoT (опционально):
-
-```bash
-make sync-codestyle   # CODESTYLE_DOCS_ROOT=... по умолчанию
-```
-
 ## MCP tools
 
 - `codestyle_find_rules` — `task`, `max_results?`

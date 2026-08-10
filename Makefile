@@ -1,4 +1,4 @@
-.PHONY: build build-mcp-server build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-prepare-task build-prepare-mr build-deploy-task build-start-sandbox build-codestyle sync-codestyle test-go
+.PHONY: build build-mcp-server build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-prepare-task build-prepare-mr build-deploy-task build-start-sandbox build-codestyle test-go
 
 # Собрать MCP-сервер + все Go CLI в bin/
 build: build-mcp-server build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-prepare-task build-prepare-mr build-deploy-task build-start-sandbox build-codestyle
@@ -57,10 +57,6 @@ build-start-sandbox:
 build-codestyle:
 	mkdir -p bin
 	go build -o bin/codestyle ./skills/codestyle/cmd/codestyle
-
-# Обновить skills/codestyle/content из CODESTYLE_DOCS_ROOT (+ анонимизация)
-sync-codestyle:
-	./scripts/sync-codestyle.sh
 
 # Прогнать все Go-тесты
 test-go:

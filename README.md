@@ -210,7 +210,7 @@ MR note или line discussion в GitLab.
 - **Зачем:** перед кодом на этом стеке найти и прочитать релевантные MUST-правила (не «по памяти»).
 - **Параметры:** `task` (+ `max_results`); затем `uri` вида `codestyle://backend/dto`.
 - **CLI:** `make build-codestyle` → `./bin/codestyle find-rules --task "..."` / `read-rule --uri ...`
-- **Обновление контента:** `make sync-codestyle` (из `CODESTYLE_DOCS_ROOT`, с анонимизацией)
+- **Правила:** править напрямую `skills/codestyle/content/` (`.codestyle/` + `mcp-meta.json`)
 
 ---
 
