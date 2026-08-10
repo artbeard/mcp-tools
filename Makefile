@@ -1,7 +1,7 @@
-.PHONY: build build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-prepare-task build-prepare-mr test-go
+.PHONY: build build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-prepare-task build-prepare-mr build-deploy-task test-go
 
 # Собрать все Go CLI в bin/
-build: build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-prepare-task build-prepare-mr
+build: build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-prepare-task build-prepare-mr build-deploy-task
 
 # Смена статуса задачи → bin/tracker-transition
 build-tracker-transition:
@@ -37,6 +37,11 @@ build-prepare-task:
 build-prepare-mr:
 	mkdir -p bin
 	go build -o bin/prepare-mr ./skills/prepare-project-merge-requests/cmd/prepare-mr
+
+# Merge task → dev + push origin/dev → bin/deploy-task
+build-deploy-task:
+	mkdir -p bin
+	go build -o bin/deploy-task ./skills/deploy-project-task-to-dev/cmd/deploy-task
 
 # Прогнать все Go-тесты
 test-go:

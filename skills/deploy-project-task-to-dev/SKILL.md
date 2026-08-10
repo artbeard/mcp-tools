@@ -5,15 +5,15 @@ description: Deterministically merge configured remote task branches into dev ac
 
 # Deploy Project Task to Dev
 
-Integrate task branches with `scripts/deploy_task_to_dev.py`.
+Integrate task branches with Go CLI `bin/deploy-task` (собрать: `make build-deploy-task`).
 
 ## Workflow
 
-1. Extract the task ID exactly and let the script detect the project from the current directory.
-2. Run `python3 scripts/deploy_task_to_dev.py --check <task-id> [--project <key>]`.
+1. Extract the task ID exactly and let the CLI detect the project from the current directory.
+2. Run `./bin/deploy-task --check <task-id> [--project <key>]`.
 3. If the result is `ok`, run the matching `--deploy` command.
 4. If either command returns `needs_resolution`, resolve only the reported repository and files, preserving both intended task behavior and current dev behavior. Stage every resolved file with `git add`, then run `--continue <task-id>`.
-5. Repeat resolution and `--continue` until the script returns `status: ok` and `push_summary.failed` plus `push_summary.not_attempted` are empty.
+5. Repeat resolution and `--continue` until the CLI returns `status: ok` and `push_summary.failed` plus `push_summary.not_attempted` are empty.
 
 An explicit user request to deploy the task to dev authorizes the checked merge commits and exact dev pushes. Never broaden it to another branch.
 
@@ -44,10 +44,9 @@ An explicit user request to deploy the task to dev authorizes the checked merge 
 
 ## Safety rules
 
-- Require remote `master`/`main`, dev, and task branches in every configured repository.
-- Require each configured base branch to be exactly `master` or `main`.
-- Reject protected branch names as task IDs.
-- Require clean working trees except for the single expected conflict-resolution merge during `--continue`.
-- Block rebase, cherry-pick, revert, bisect, detached HEAD, force, reset, stash, clean, branch deletion, and history rewriting.
-- Update local dev only by fast-forwarding from the fetched remote dev before creating the task merge commit.
-- Read ``.workspace.yaml`` only when project membership, paths, remotes, or dev branch settings need inspection.
+- Require clean work trees except during an authorized active merge on `dev`.
+- Reject detached HEAD and unsupported in-progress Git operations.
+- Never use stash, reset, clean, rebase, force checkout, or history rewriting.
+- Never push anything other than `dev`.
+- Stop on failure and report the exact phase and partial state from the CLI JSON.
+- Read ``.workspace.yaml`` only when project membership, paths, remotes, or branch settings need inspection.

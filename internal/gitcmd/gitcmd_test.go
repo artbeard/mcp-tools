@@ -47,3 +47,23 @@ func TestPushTaskBranchGuards(t *testing.T) {
 		t.Fatal("Git must still forbid push")
 	}
 }
+
+// PushDevBranch только для "dev"; Git банит reset.
+func TestPushDevBranchGuards(t *testing.T) {
+	_, err := gitcmd.PushDevBranch("/tmp", "origin", "main")
+	if err == nil {
+		t.Fatal("expected SafetyError for main")
+	}
+	if _, ok := err.(*gitcmd.SafetyError); !ok {
+		t.Fatalf("got %T %v", err, err)
+	}
+	// guard проходит (ошибка будет от самого git, не SafetyError)
+	_, err = gitcmd.PushDevBranch("/tmp", "origin", "dev")
+	if _, ok := err.(*gitcmd.SafetyError); ok {
+		t.Fatalf("PushDevBranch(dev) must not SafetyError on guard: %v", err)
+	}
+	_, err = gitcmd.Git("/tmp", 0, "reset", "--hard")
+	if err == nil {
+		t.Fatal("Git must forbid reset")
+	}
+}
