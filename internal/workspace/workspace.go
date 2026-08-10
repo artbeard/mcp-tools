@@ -85,6 +85,23 @@ type MRRepo struct {
 	TargetBranch string // branches.mr_target (master|main) - куда открываем MR
 }
 
+// DeployProject - адаптер как Python as_deploy_project.
+type DeployProject struct {
+	Key          string       // = Manifest.Name
+	Type         string       // multi_repo | monorepo
+	Workspace    string       // = Manifest.Root
+	Repositories []DeployRepo // урезанный список для check/deploy/continue
+}
+
+// DeployRepo - repo для merge task → dev + push origin/dev.
+type DeployRepo struct {
+	Label      string // имя репы в отчёте / JSON
+	Path       string // abs path work tree
+	Remote     string // remote для fetch / push
+	BaseBranch string // master|main - для history_guard
+	DevBranch  string // всегда "dev" - куда мёржим и что пушим
+}
+
 // Find ищет .workspace.yaml вверх от start.
 func Find(start string) (string, error) {
 	current, err := filepath.Abs(start)
@@ -203,6 +220,26 @@ func AsMR(m *Manifest) MRProject {
 		})
 	}
 	return MRProject{
+		Key:          m.Name,
+		Type:         m.Type,
+		Workspace:    m.Root,
+		Repositories: repos,
+	}
+}
+
+// AsDeploy - проект для check/deploy/continue (task → dev).
+func AsDeploy(m *Manifest) DeployProject {
+	repos := make([]DeployRepo, 0, len(m.Repositories))
+	for _, r := range m.Repositories {
+		repos = append(repos, DeployRepo{
+			Label:      r.Label,
+			Path:       r.Path,
+			Remote:     r.Remote,
+			BaseBranch: r.BaseBranch,
+			DevBranch:  r.DevBranch,
+		})
+	}
+	return DeployProject{
 		Key:          m.Name,
 		Type:         m.Type,
 		Workspace:    m.Root,
@@ -375,6 +412,12 @@ func parseManifest(data map[string]any, root, manifestPath string) (*Manifest, e
 			if err != nil {
 				return nil, err
 			}
+		}
+		if dev != "dev" {
+			return nil, errf("%s: branches.dev только dev, сейчас %s", repoID, dev)
+		}
+		if _, ok := protectedSet[dev]; !ok {
+			return nil, errf("%s: branches.dev должен быть в git.protected_branches", repoID)
 		}
 		repos = append(repos, Repo{
 			ID: repoID, Label: repoID, Path: absPath, RelPath: relPath,

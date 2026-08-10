@@ -127,3 +127,51 @@ git:
 		t.Fatalf("%#v", p)
 	}
 }
+
+// branches.dev не "dev" - ошибка; AsDeploy отдаёт DevBranch.
+func TestBadDevBranchAndAsDeploy(t *testing.T) {
+	root := t.TempDir()
+	writeManifest(t, root, `
+schema_version: 1
+name: bad-dev
+type: monorepo
+repositories:
+  - id: app
+    path: .
+    branches:
+      base: master
+      dev: staging
+git:
+  protected_base_branches: [master, main]
+  protected_branches: [master, main, staging]
+`)
+	if _, err := workspace.Load(root); err == nil {
+		t.Fatal("expected dev branch error")
+	}
+
+	okRoot := t.TempDir()
+	writeManifest(t, okRoot, `
+schema_version: 1
+name: ok-deploy
+type: monorepo
+repositories:
+  - id: app
+    path: app
+    remote: origin
+    branches:
+      base: master
+      dev: dev
+git:
+  protected_base_branches: [master, main]
+  protected_branches: [master, main, dev]
+`)
+	_ = os.MkdirAll(filepath.Join(okRoot, "app"), 0o755)
+	m, err := workspace.Load(okRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p := workspace.AsDeploy(m)
+	if p.Key != "ok-deploy" || len(p.Repositories) != 1 || p.Repositories[0].DevBranch != "dev" {
+		t.Fatalf("%#v", p)
+	}
+}
