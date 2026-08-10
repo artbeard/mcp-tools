@@ -131,7 +131,7 @@ Health-check сервера.
 - **Зачем:** подготовить ветку задачи от `master`/`main`.
 - **Параметры:** `mode` = `list|check|prepare`; `task_id`; опционально `project`, `cwd`.
 - **Конфиг:** `.workspace.yaml` (repositories + branches.base)
-- **CLI:** `python .../prepare_task_branch.py --check IT-123`
+- **CLI (Go):** `make build-prepare-task` → `./bin/prepare-task --check IT-123`
 
 ### `prepare_project_merge_requests`
 
