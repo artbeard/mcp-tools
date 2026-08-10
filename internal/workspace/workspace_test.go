@@ -79,3 +79,51 @@ repositories:
 		t.Fatal("expected error")
 	}
 }
+
+// mr_target: dev - ошибка; AsMR отдаёт TargetBranch.
+func TestBadMRTargetAndAsMR(t *testing.T) {
+	root := t.TempDir()
+	writeManifest(t, root, `
+schema_version: 1
+name: bad-mr
+type: monorepo
+repositories:
+  - id: app
+    path: .
+    branches:
+      base: master
+      mr_target: dev
+git:
+  protected_base_branches: [master, main]
+  protected_branches: [master, main, dev]
+`)
+	if _, err := workspace.Load(root); err == nil {
+		t.Fatal("expected mr_target error")
+	}
+
+	okRoot := t.TempDir()
+	writeManifest(t, okRoot, `
+schema_version: 1
+name: ok-mr
+type: monorepo
+repositories:
+  - id: app
+    path: app
+    remote: origin
+    branches:
+      base: master
+      mr_target: main
+git:
+  protected_base_branches: [master, main]
+  protected_branches: [master, main, dev]
+`)
+	_ = os.MkdirAll(filepath.Join(okRoot, "app"), 0o755)
+	m, err := workspace.Load(okRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p := workspace.AsMR(m)
+	if p.Key != "ok-mr" || len(p.Repositories) != 1 || p.Repositories[0].TargetBranch != "main" {
+		t.Fatalf("%#v", p)
+	}
+}

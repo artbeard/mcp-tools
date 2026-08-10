@@ -108,6 +108,13 @@ def _prepare_task_cmd() -> list[str]:
     return ["go", "run", "./skills/prepare-project-task/cmd/prepare-task"]
 
 
+def _prepare_mr_cmd() -> list[str]:
+    binary = ROOT / "bin" / "prepare-mr"
+    if binary.is_file() and os.access(binary, os.X_OK):
+        return [str(binary)]
+    return ["go", "run", "./skills/prepare-project-merge-requests/cmd/prepare-mr"]
+
+
 def _write_temp(text: str, suffix: str = ".txt") -> Path:
     handle = tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=suffix, delete=False)
     handle.write(text)
@@ -210,7 +217,7 @@ def prepare_project_merge_requests(
     title: str | None = None,
     description: str | None = None,
 ) -> str:
-    script = SKILLS / "prepare-project-merge-requests" / "scripts" / "prepare_merge_requests.py"
+    # Go CLI prepare-mr
     mode = mode.strip().lower()
     args: list[str] = []
     desc_path: Path | None = None
@@ -230,7 +237,7 @@ def prepare_project_merge_requests(
         if description is not None:
             desc_path = _write_temp(description, suffix=".md")
             args.extend(["--description-file", str(desc_path)])
-        return _run(script, args, cwd=cwd)
+        return _run(Path(), args, command=_prepare_mr_cmd(), cwd=cwd)
     finally:
         if desc_path is not None:
             desc_path.unlink(missing_ok=True)
