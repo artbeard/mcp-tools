@@ -42,3 +42,42 @@ func TestFindDiffLine(t *testing.T) {
 		t.Fatal("expected missing file")
 	}
 }
+
+// ParseRemoteURL для git@ / https.
+func TestParseRemoteURL(t *testing.T) {
+	r, err := gitlab.ParseRemoteURL("git@gitlab.example.com:group/proj.git")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.Host != "gitlab.example.com" || r.ProjectPath != "group/proj" {
+		t.Fatalf("%#v", r)
+	}
+	r, err = gitlab.ParseRemoteURL("https://gitlab.example.com/group/proj.git")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.ProjectPath != "group/proj" {
+		t.Fatalf("%#v", r)
+	}
+	if _, err := gitlab.ParseRemoteURL("not-a-remote"); err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+// ValidateMRRecord проверяет path.
+func TestValidateMRRecord(t *testing.T) {
+	sum, err := gitlab.ValidateMRRecord(map[string]any{
+		"iid":     float64(7),
+		"web_url": "https://gitlab.example.com/group/proj/-/merge_requests/7",
+		"title":   "t",
+	}, "group/proj")
+	if err != nil || sum.IID != 7 {
+		t.Fatalf("%#v %v", sum, err)
+	}
+	if _, err := gitlab.ValidateMRRecord(map[string]any{
+		"iid":     7,
+		"web_url": "https://gitlab.example.com/other/-/merge_requests/7",
+	}, "group/proj"); err == nil {
+		t.Fatal("expected path mismatch")
+	}
+}

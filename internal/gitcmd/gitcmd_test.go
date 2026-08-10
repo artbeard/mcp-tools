@@ -28,3 +28,22 @@ func TestValidateTaskID(t *testing.T) {
 		t.Fatalf("%v", errs)
 	}
 }
+
+// PushTaskBranch не пускает master/protected; Git всё ещё банит push.
+func TestPushTaskBranchGuards(t *testing.T) {
+	_, err := gitcmd.PushTaskBranch("/tmp", "origin", "master", nil)
+	if err == nil {
+		t.Fatal("expected SafetyError for master")
+	}
+	if _, ok := err.(*gitcmd.SafetyError); !ok {
+		t.Fatalf("got %T %v", err, err)
+	}
+	_, err = gitcmd.PushTaskBranch("/tmp", "origin", "IT-1", []string{"IT-1"})
+	if err == nil {
+		t.Fatal("expected SafetyError for protected")
+	}
+	_, err = gitcmd.Git("/tmp", 0, "push", "origin", "HEAD")
+	if err == nil {
+		t.Fatal("Git must still forbid push")
+	}
+}

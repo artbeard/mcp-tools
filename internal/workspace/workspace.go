@@ -1,5 +1,5 @@
-// Package workspace - загрузка .workspace.yaml (subset для prepare-task).
-// Sandbox / полный validator - позже; prepare не требует probe/compose.
+// Package workspace - загрузка .workspace.yaml (prepare-task / prepare-mr).
+// Sandbox / полный validator - позже.
 package workspace
 
 import (
@@ -67,6 +67,22 @@ type PrepareRepo struct {
 	Path       string // abs path work tree
 	Remote     string // remote для fetch/ls-remote
 	BaseBranch string // master|main - откуда режем task-ветку
+}
+
+// MRProject - адаптер как Python as_mr_project.
+type MRProject struct {
+	Key          string   // = Manifest.Name
+	Type         string   // multi_repo | monorepo
+	Workspace    string   // = Manifest.Root
+	Repositories []MRRepo // урезанный список полей для check/create MR
+}
+
+// MRRepo - repo для check/create MR.
+type MRRepo struct {
+	Label        string // имя репы в отчёте / JSON
+	Path         string // abs path work tree
+	Remote       string // remote для fetch / push task
+	TargetBranch string // branches.mr_target (master|main) - куда открываем MR
 }
 
 // Find ищет .workspace.yaml вверх от start.
@@ -175,6 +191,25 @@ func AsPrepare(m *Manifest) PrepareProject {
 	}
 }
 
+// AsMR - проект для check/create merge requests.
+func AsMR(m *Manifest) MRProject {
+	repos := make([]MRRepo, 0, len(m.Repositories))
+	for _, r := range m.Repositories {
+		repos = append(repos, MRRepo{
+			Label:        r.Label,
+			Path:         r.Path,
+			Remote:       r.Remote,
+			TargetBranch: r.TargetBranch,
+		})
+	}
+	return MRProject{
+		Key:          m.Name,
+		Type:         m.Type,
+		Workspace:    m.Root,
+		Repositories: repos,
+	}
+}
+
 // ListPayload - JSON для --list (+ push_allowed добавляет CLI).
 func ListPayload(m *Manifest) map[string]any {
 	repos := make([]map[string]any, 0, len(m.Repositories))
@@ -268,6 +303,7 @@ func parseManifest(data map[string]any, root, manifestPath string) (*Manifest, e
 		protected = []string{"master", "main", "dev"}
 	}
 	protectedBaseSet := toSet(protectedBase)
+	protectedSet := toSet(protected)
 
 	seenIDs := map[string]struct{}{}
 	repos := make([]Repo, 0, len(reposRaw))
@@ -326,6 +362,12 @@ func parseManifest(data map[string]any, root, manifestPath string) (*Manifest, e
 			if err != nil {
 				return nil, err
 			}
+		}
+		if _, ok := AllowedWorkBases[mrTarget]; !ok {
+			return nil, errf("%s: branches.mr_target только master или main, сейчас %s", repoID, mrTarget)
+		}
+		if _, ok := protectedSet[mrTarget]; !ok {
+			return nil, errf("%s: branches.mr_target должен быть в git.protected_branches", repoID)
 		}
 		dev := "dev"
 		if branches["dev"] != nil {

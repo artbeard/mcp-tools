@@ -78,10 +78,24 @@ func Run(cwd string, timeout time.Duration, command string, args ...string) Resu
 // Git - git -C repo ...; arguments[0]==push → SafetyError.
 func Git(repo string, timeout time.Duration, arguments ...string) (Result, error) {
 	if len(arguments) > 0 && arguments[0] == "push" {
-		return Result{}, &SafetyError{Msg: "git push запрещён в prepare-project-task"}
+		return Result{}, &SafetyError{Msg: "git push запрещён; используй PushTaskBranch"}
 	}
 	args := append([]string{"-C", repo}, arguments...)
 	return Run("", timeout, "git", args...), nil
+}
+
+// PushTaskBranch - единственный разрешённый push: refs/heads/{task}:refs/heads/{task}.
+func PushTaskBranch(repo, remote, taskID string, protected []string) (Result, error) {
+	if _, ok := ForbiddenTaskBranches[taskID]; ok {
+		return Result{}, &SafetyError{Msg: fmt.Sprintf("нельзя публиковать защищённую ветку: %s", taskID)}
+	}
+	for _, p := range protected {
+		if taskID == p {
+			return Result{}, &SafetyError{Msg: fmt.Sprintf("нельзя публиковать защищённую ветку: %s", taskID)}
+		}
+	}
+	refspec := fmt.Sprintf("refs/heads/%s:refs/heads/%s", taskID, taskID)
+	return Run(repo, 180*time.Second, "git", "push", remote, refspec), nil
 }
 
 // MustGit - как Git, но SafetyError пробрасывается; для CLI удобнее Git.

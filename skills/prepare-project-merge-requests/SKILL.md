@@ -5,20 +5,20 @@ description: Deterministically publish configured local task branches and create
 
 # Prepare Project Merge Requests
 
-Create GitLab merge requests with `scripts/prepare_merge_requests.py`.
+Publish task branches and create/reuse GitLab MRs with Go CLI `bin/prepare-mr` (собрать: `make build-prepare-mr`).
 
 ## Workflow
 
 1. Extract the task ID exactly. Never normalize it.
 2. Derive the MR title from each task branch head commit unless the user supplies one exact title.
-3. Run `python3 scripts/prepare_merge_requests.py --check <task-id> [--project <key>] [--title <title>]`.
+3. Run `./bin/prepare-mr --check <task-id> [--project <key>] [--title <title>]`.
 4. Report and stop on any failed repository check.
 5. After a successful check, run the matching command with `--create` instead of `--check`.
 6. Require `status: ok` and use the validated top-level `mr_urls` list as the result. Report every URL. Treat `already_exists` and `no_changes` as idempotent successes.
 
-Let the script detect the project from the current directory. Pass `--project` only when the user explicitly names another project. Use `--description-file` only for exact user-approved UTF-8 text.
+Let the CLI detect the project from the current directory. Pass `--project` only when the user explicitly names another project. Use `--description-file` only for exact user-approved UTF-8 text.
 
-The script reads the GitLab token only from the configured local env file. Never print, copy, or ask the user to paste the token.
+The CLI reads `GITLAB_TOKEN` and `GITLAB_BASE_URL` only from the repo-root `.env` / `.env.local`. Never print, copy, or ask the user to paste the token.
 
 ## Branch direction invariant
 

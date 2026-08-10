@@ -1,4 +1,4 @@
-// Package gitlab - HTTP-клиент GitLab API (MR notes / discussions).
+// Package gitlab - HTTP-клиент GitLab API (MR notes / create / discussions).
 package gitlab
 
 import (
@@ -279,4 +279,143 @@ func DiffRefsFromMR(mr map[string]any) (base, start, head string, err error) {
 		return "", "", "", fmt.Errorf("MR diff_refs are missing; cannot create line discussion")
 	}
 	return base, start, head, nil
+}
+
+// RemoteRef - host + project path из git remote URL.
+type RemoteRef struct {
+	Host        string
+	ProjectPath string
+}
+
+// ParseRemoteURL - git@host:path.git / ssh:// / https:// → host + path без .git.
+func ParseRemoteURL(remoteURL string) (RemoteRef, error) {
+	raw := strings.TrimSpace(remoteURL)
+	var host, path string
+	switch {
+	case strings.HasPrefix(raw, "git@") && strings.Contains(raw, ":"):
+		rest := raw[len("git@"):]
+		host, path, _ = strings.Cut(rest, ":")
+	case strings.HasPrefix(raw, "ssh://"):
+		u, err := url.Parse(raw)
+		if err != nil {
+			return RemoteRef{}, fmt.Errorf("неподдерживаемый remote URL: %s", remoteURL)
+		}
+		host = u.Hostname()
+		path = strings.TrimPrefix(u.Path, "/")
+	default:
+		u, err := url.Parse(raw)
+		if err != nil {
+			return RemoteRef{}, fmt.Errorf("неподдерживаемый remote URL: %s", remoteURL)
+		}
+		host = u.Hostname()
+		path = strings.TrimPrefix(u.Path, "/")
+	}
+	path = strings.TrimSuffix(path, ".git")
+	if host == "" || path == "" {
+		return RemoteRef{}, fmt.Errorf("неподдерживаемый remote URL: %s", remoteURL)
+	}
+	return RemoteRef{Host: host, ProjectPath: path}, nil
+}
+
+// MRSummary - iid / url / title после validate.
+type MRSummary struct {
+	IID   int
+	URL   string
+	Title any
+}
+
+// ValidateMRRecord проверяет iid и web_url path = /{project}/-/merge_requests/{iid}.
+func ValidateMRRecord(record map[string]any, projectPath string) (MRSummary, error) {
+	if record == nil {
+		return MRSummary{}, fmt.Errorf("ответ GitLab MR должен быть объектом")
+	}
+	iid, ok := asPositiveInt(record["iid"])
+	if !ok {
+		return MRSummary{}, fmt.Errorf("в ответе GitLab MR нет валидного iid")
+	}
+	urlRaw, _ := record["web_url"].(string)
+	urlRaw = strings.TrimSpace(urlRaw)
+	if urlRaw == "" {
+		return MRSummary{}, fmt.Errorf("в ответе GitLab MR нет web_url")
+	}
+	parsed, err := url.Parse(urlRaw)
+	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "" {
+		return MRSummary{}, fmt.Errorf("GitLab MR web_url должен быть абсолютным HTTP(S) URL")
+	}
+	expected := fmt.Sprintf("/%s/-/merge_requests/%d", projectPath, iid)
+	got, err := url.PathUnescape(strings.TrimRight(parsed.Path, "/"))
+	if err != nil {
+		got = strings.TrimRight(parsed.Path, "/")
+	}
+	if got != expected {
+		return MRSummary{}, fmt.Errorf("GitLab MR web_url не совпадает с project и iid: %s", urlRaw)
+	}
+	return MRSummary{IID: iid, URL: urlRaw, Title: record["title"]}, nil
+}
+
+func asPositiveInt(v any) (int, bool) {
+	switch n := v.(type) {
+	case int:
+		return n, n >= 1
+	case int64:
+		return int(n), n >= 1
+	case float64:
+		if n != float64(int(n)) || n < 1 {
+			return 0, false
+		}
+		return int(n), true
+	case json.Number:
+		i, err := n.Int64()
+		return int(i), err == nil && i >= 1
+	default:
+		return 0, false
+	}
+}
+
+// FindOpenedMR - первый opened MR с source/target branch.
+func (c *Client) FindOpenedMR(projectPath, sourceBranch, targetBranch string) (*MRSummary, error) {
+	q := url.Values{
+		"state":         {"opened"},
+		"source_branch": {sourceBranch},
+		"target_branch": {targetBranch},
+	}
+	rawURL := fmt.Sprintf("%s/merge_requests?%s", c.projectAPI(projectPath), q.Encode())
+	raw, err := c.do(http.MethodGet, rawURL, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	var list []map[string]any
+	if err := json.Unmarshal(raw, &list); err != nil {
+		return nil, fmt.Errorf("неожиданный ответ GitLab при проверке existing MR")
+	}
+	if len(list) == 0 {
+		return nil, nil
+	}
+	sum, err := ValidateMRRecord(list[0], projectPath)
+	if err != nil {
+		return nil, err
+	}
+	return &sum, nil
+}
+
+// CreateMR - POST merge_request.
+func (c *Client) CreateMR(projectPath, sourceBranch, targetBranch, title, description string) (MRSummary, error) {
+	payload, err := json.Marshal(map[string]string{
+		"source_branch": sourceBranch,
+		"target_branch": targetBranch,
+		"title":         title,
+		"description":   description,
+	})
+	if err != nil {
+		return MRSummary{}, err
+	}
+	raw, err := c.do(http.MethodPost, c.projectAPI(projectPath)+"/merge_requests", payload, "application/json")
+	if err != nil {
+		return MRSummary{}, err
+	}
+	var record map[string]any
+	if err := json.Unmarshal(raw, &record); err != nil {
+		return MRSummary{}, fmt.Errorf("неожиданный ответ GitLab при создании MR: %w", err)
+	}
+	return ValidateMRRecord(record, projectPath)
 }
