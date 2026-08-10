@@ -8,7 +8,7 @@
 |--------------------------|-------|-----|--------|
 | `start-project-sandbox` | `start-project-sandbox` | `start_project_sandbox` | в репо (Python) |
 | `prepare-project-task` | `prepare-project-task` | `prepare_project_task` | Go |
-| `prepare-project-merge-requests` | `prepare-project-merge-requests` | `prepare_project_merge_requests` | в репо (Python) |
+| `prepare-project-merge-requests` | `prepare-project-merge-requests` | `prepare_project_merge_requests` | Go |
 | `deploy-project-task-to-dev` | `deploy-project-task-to-dev` | `deploy_project_task_to_dev` | в репо (Python) |
 | `abcage-tracker-timekeeper` | `yandex-tracker-timekeeper` | `yandex_tracker_timekeeper` | Go |
 | `abcage-tracker-issue-creator` | `yandex-tracker-issue-creator` | `yandex_tracker_issue_creator` | Go |
@@ -32,6 +32,7 @@
 - [x] `tracker-time` → `bin/tracker-time`
 - [x] `gitlab-mr-comment` → `bin/gitlab-mr-comment`
 - [x] `prepare-task` → `bin/prepare-task`
+- [x] `prepare-mr` → `bin/prepare-mr`
 - [x] общие пакеты: `internal/envfile` (`.env` + `.env.local`), `internal/tracker`, `internal/gitlab`, `internal/timerstate`, `internal/repopath`, `internal/workspace`, `internal/gitcmd`
 
 ## Go: осталось перенести
@@ -39,11 +40,11 @@
 Локальный git / sandbox. Пока Python под `skills/*/scripts/`.
 
 - [x] `prepare-project-task` → `bin/prepare-task`
-- [ ] `prepare-project-merge-requests` (`prepare_merge_requests.py`) - push + MR в GitLab (сейчас ещё читает `config/gitlab.env`)
+- [x] `prepare-project-merge-requests` → `bin/prepare-mr`
 - [ ] `deploy-project-task-to-dev` (`deploy_task_to_dev.py`) - merge task → `dev`
 - [ ] `start-project-sandbox` (`start_sandbox.py`) - docker/tmux/process lifecycle
 
-Порядок дальше: prepare-MR → deploy → sandbox.
+Порядок дальше: deploy → sandbox.
 
 ## После порта git-скиллов (cleanup)
 

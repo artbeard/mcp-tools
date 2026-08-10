@@ -139,8 +139,8 @@ Publish веток + create/reuse GitLab MR.
 
 - **Зачем:** открыть MR по задаче во всех репах.
 - **Параметры:** `mode` = `list|check|create`; `task_id`; опционально `project`, `cwd`, `title`, `description`.
-- **Конфиг:** `.workspace.yaml` + `config/gitlab.env`
-- **CLI:** `python .../prepare_merge_requests.py --check IT-123`
+- **Конфиг:** `.workspace.yaml` + корневой `.env` / `.env.local` (`GITLAB_TOKEN`, `GITLAB_BASE_URL`)
+- **CLI (Go):** `make build-prepare-mr` → `./bin/prepare-mr --check IT-123`
 
 ### `deploy_project_task_to_dev`
 
