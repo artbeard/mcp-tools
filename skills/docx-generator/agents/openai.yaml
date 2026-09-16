@@ -1,0 +1,4 @@
+interface:
+  display_name: "DOCX Generator"
+  short_description: "Детерминированные DOCX с базовым стилем или стилями образца"
+  default_prompt: "Используй $docx-generator, чтобы создать редактируемый DOCX; если есть образец, унаследуй его оформление."
