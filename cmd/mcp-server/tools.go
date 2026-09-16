@@ -134,6 +134,16 @@ func registerTools(s *server.MCPServer) {
 		mcp.WithString("env_dir", mcp.Description("каталог с .env / .env.local")),
 	), handleGitLabMRContext)
 
+	// skills/gitlab-group-cloner — список и HTTPS/SSH-клонирование репозиториев группы.
+	s.AddTool(mcp.NewTool("gitlab_group_clone",
+		mcp.WithDescription("Получает список или клонирует все доступные репозитории GitLab-группы и подгрупп по HTTPS или SSH. Сначала используй mode=list, затем mode=clone после подтверждения output_dir."),
+		mcp.WithString("mode", mcp.Required(), mcp.Description("list|clone")),
+		mcp.WithString("protocol", mcp.Description("https|ssh; по умолчанию https")),
+		mcp.WithString("group", mcp.Required(), mcp.Description("путь группы, например etp/replicas")),
+		mcp.WithString("output_dir", mcp.Description("каталог для клонов; обязателен для clone")),
+		mcp.WithString("env_dir", mcp.Description("каталог с .env / .env.local")),
+	), handleGitLabGroupClone)
+
 	// skills/codestyle — поиск релевантных правил по описанию задачи.
 	s.AddTool(mcp.NewTool("codestyle_find_rules",
 		mcp.WithDescription("Ищет правила кодстайла (PHP/Symfony + Vue/TS) по описанию задачи. Вернёт URI + priority + summary; затем читай critical через codestyle_read_rule. Не пиши код «по памяти»."),
@@ -463,6 +473,18 @@ func handleGitLabMRContext(_ context.Context, req mcp.CallToolRequest) (*mcp.Cal
 		args = append(args, "--parse-only")
 	}
 	return textResult(runCLI(resolveCmd("gitlab-mr-context", "./skills/gitlab-mr-reviewer/cmd/gitlab-mr-context"), args, "")), nil
+}
+
+func handleGitLabGroupClone(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	mode := req.GetString("mode", "list")
+	protocol := req.GetString("protocol", "https")
+	group := req.GetString("group", "")
+	output := req.GetString("output_dir", "")
+	envDir := req.GetString("env_dir", "")
+	args := []string{"--mode", mode, "--protocol", protocol, "--group", group}
+	args = append(args, optFlag("--output-dir", output)...)
+	args = append(args, optFlag("--env-dir", envDir)...)
+	return textResult(runCLI(resolveCmd("gitlab-group-clone", "./skills/gitlab-group-cloner/cmd/gitlab-group-clone"), args, "")), nil
 }
 
 func handleCodestyleFindRules(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {

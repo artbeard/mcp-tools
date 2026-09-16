@@ -1,0 +1,4 @@
+interface:
+  display_name: "GitLab Group Cloner"
+  short_description: "Clone all repositories from a GitLab group"
+  default_prompt: "Используй $gitlab-group-cloner, чтобы получить список или скачать репозитории GitLab-группы для локального анализа."
