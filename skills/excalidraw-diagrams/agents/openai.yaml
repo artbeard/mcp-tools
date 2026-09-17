@@ -1,0 +1,4 @@
+interface:
+  display_name: "Excalidraw Diagrams"
+  short_description: "Редактируемые схемы с привязанными стрелками"
+  default_prompt: "Используй $excalidraw-diagrams, чтобы создать редактируемую Excalidraw-схему; добавляй связи только там, где они нужны."

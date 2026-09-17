@@ -2,6 +2,8 @@
 
 Tools for AI agents (Cursor / Codex CLI / Zed) over one local **MCP** server: sandboxes, git branches, GitLab MRs, Yandex Tracker, codestyle lookup, MR review context.
 
+It also creates deterministic, editable Excalidraw diagrams: declared connections are generated as arrows bound to their source and target, so they remain attached when objects move.
+
 Logic lives in Go CLIs (`bin/*`). `bin/mcp-server` is a thin stdio wrapper — no long-running daemon.
 
 ---

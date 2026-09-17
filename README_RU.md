@@ -138,6 +138,10 @@ cp config/workspace.example.yaml /path/to/workspace/.workspace.yaml
 
 Проверка, что сервер жив.
 
+### `excalidraw_create`
+
+Создаёт новый редактируемый файл `.excalidraw` из `diagram.nodes` и необязательных `diagram.connections` (`skills/excalidraw-diagrams`). Дефолтные стили и раскладка детерминированные; каждая объявленная связь создаётся как стрелка с bindings к обоим узлам, поэтому следует за ними при перемещении в Excalidraw. Не объявляй `connections`, если связи на схеме нет. Существующий `output` не перезаписывается.
+
 ### `start_project_sandbox`
 
 Старт / стоп / статус песочницы проекта (`skills/start-project-sandbox`).

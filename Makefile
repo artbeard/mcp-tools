@@ -1,7 +1,7 @@
-.PHONY: build build-mcp-server build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-gitlab-mr-context build-gitlab-group-clone build-docx-create build-prepare-task build-prepare-mr build-deploy-task build-start-sandbox build-codestyle test-go
+.PHONY: build build-mcp-server build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-gitlab-mr-context build-gitlab-group-clone build-docx-create build-excalidraw-create build-prepare-task build-prepare-mr build-deploy-task build-start-sandbox build-codestyle test-go
 
 # Собрать MCP-сервер + все Go CLI в bin/
-build: build-mcp-server build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-gitlab-mr-context build-gitlab-group-clone build-docx-create build-prepare-task build-prepare-mr build-deploy-task build-start-sandbox build-codestyle
+build: build-mcp-server build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-gitlab-mr-context build-gitlab-group-clone build-docx-create build-excalidraw-create build-prepare-task build-prepare-mr build-deploy-task build-start-sandbox build-codestyle
 
 # stdio MCP → bin/mcp-server
 build-mcp-server:
@@ -47,6 +47,11 @@ build-gitlab-group-clone:
 build-docx-create:
 	mkdir -p bin
 	go build -o bin/docx-create ./skills/docx-generator/cmd/docx-create
+
+# Детерминированные редактируемые Excalidraw-схемы → bin/excalidraw-create
+build-excalidraw-create:
+	mkdir -p bin
+	go build -o bin/excalidraw-create ./skills/excalidraw-diagrams/cmd/excalidraw-create
 
 # Локальные task-ветки → bin/prepare-task
 build-prepare-task:

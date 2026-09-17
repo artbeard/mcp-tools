@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -143,6 +144,13 @@ func registerTools(s *server.MCPServer) {
 		mcp.WithString("output_dir", mcp.Description("каталог для клонов; обязателен для clone")),
 		mcp.WithString("env_dir", mcp.Description("каталог с .env / .env.local")),
 	), handleGitLabGroupClone)
+
+	// skills/excalidraw-diagrams — детерминированная генерация .excalidraw.
+	s.AddTool(mcp.NewTool("excalidraw_create",
+		mcp.WithDescription("Создаёт новый редактируемый .excalidraw из структуры nodes/connections. Объявленные connections становятся стрелками с двусторонними bindings к объектам; несуществующий output не перезаписывается."),
+		mcp.WithObject("diagram", mcp.Required(), mcp.Description("спецификация: nodes (id,label,shape?,x?,y?,width?,height?), connections (from,to,id?,label?), layout (direction?,gap?,origin_x?,origin_y?)")),
+		mcp.WithString("output", mcp.Required(), mcp.Description("абсолютный или относительный путь к новому .excalidraw")),
+	), handleExcalidrawCreate)
 
 	// skills/codestyle — поиск релевантных правил по описанию задачи.
 	s.AddTool(mcp.NewTool("codestyle_find_rules",
@@ -485,6 +493,24 @@ func handleGitLabGroupClone(_ context.Context, req mcp.CallToolRequest) (*mcp.Ca
 	args = append(args, optFlag("--output-dir", output)...)
 	args = append(args, optFlag("--env-dir", envDir)...)
 	return textResult(runCLI(resolveCmd("gitlab-group-clone", "./skills/gitlab-group-cloner/cmd/gitlab-group-clone"), args, "")), nil
+}
+
+func handleExcalidrawCreate(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	diagram, ok := req.GetArguments()["diagram"]
+	if !ok {
+		return textResult("ОШИБКА: нужен diagram"), nil
+	}
+	raw, err := json.Marshal(diagram)
+	if err != nil {
+		return textResult(fmt.Sprintf("ОШИБКА: diagram: %v", err)), nil
+	}
+	temp, err := writeTemp(string(raw), ".excalidraw-input.json")
+	if err != nil {
+		return textResult(fmt.Sprintf("ОШИБКА: временный файл: %v", err)), nil
+	}
+	defer os.Remove(temp)
+	output := strings.TrimSpace(req.GetString("output", ""))
+	return textResult(runCLI(resolveCmd("excalidraw-create", "./skills/excalidraw-diagrams/cmd/excalidraw-create"), []string{"--input", temp, "--output", output}, "")), nil
 }
 
 func handleCodestyleFindRules(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
