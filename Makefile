@@ -1,7 +1,7 @@
-.PHONY: build build-mcp-server build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-gitlab-mr-context build-gitlab-group-clone build-docx-create build-excalidraw-create build-prepare-task build-prepare-mr build-deploy-task build-start-sandbox build-codestyle test-go
+.PHONY: build build-mcp-server build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-gitlab-mr-context build-gitlab-group-clone build-docx-create build-excalidraw-create build-ms-project build-prepare-task build-prepare-mr build-deploy-task build-start-sandbox build-codestyle test-go
 
 # Собрать MCP-сервер + все Go CLI в bin/
-build: build-mcp-server build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-gitlab-mr-context build-gitlab-group-clone build-docx-create build-excalidraw-create build-prepare-task build-prepare-mr build-deploy-task build-start-sandbox build-codestyle
+build: build-mcp-server build-tracker-transition build-tracker-comment build-tracker-create-issue build-tracker-time build-gitlab-mr-comment build-gitlab-mr-context build-gitlab-group-clone build-docx-create build-excalidraw-create build-ms-project build-prepare-task build-prepare-mr build-deploy-task build-start-sandbox build-codestyle
 
 # stdio MCP → bin/mcp-server
 build-mcp-server:
@@ -52,6 +52,11 @@ build-docx-create:
 build-excalidraw-create:
 	mkdir -p bin
 	go build -o bin/excalidraw-create ./skills/excalidraw-diagrams/cmd/excalidraw-create
+
+# Открытые планы настольного Microsoft Project → bin/ms-project
+build-ms-project:
+	mkdir -p bin
+	go build -o bin/ms-project ./skills/ms-project-desktop/cmd/ms-project
 
 # Локальные task-ветки → bin/prepare-task
 build-prepare-task:

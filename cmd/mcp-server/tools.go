@@ -6,17 +6,53 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/artbeard/mcp-tools/internal/timerstate"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
 
+var msProjectSessionBackups = struct {
+	sync.Mutex
+	plans map[string]struct{}
+}{
+	plans: make(map[string]struct{}),
+}
+
 func registerTools(s *server.MCPServer) {
 	// Health-check самого MCP-сервера (не скилл).
 	s.AddTool(mcp.NewTool("ping",
 		mcp.WithDescription("Проверка живости MCP-сервера mcp-tools."),
 	), handlePing)
+
+	// skills/ms-project-desktop — чтение списка открытых планов Windows Project.
+	s.AddTool(mcp.NewTool("ms_project_desktop",
+		mcp.WithDescription("Читает открытые .mpp в настольном Microsoft Project на хосте Windows. status находит планы, outline возвращает структуру задач, backup создаёт резервную копию последней сохранённой версии."),
+		mcp.WithString("action", mcp.Required(), mcp.Description("status|outline|backup")),
+	), handleMSProjectDesktop)
+
+	s.AddTool(mcp.NewTool("ms_project_preview_task_update",
+		mcp.WithDescription("Предварительный просмотр изменения задачи Microsoft Project. Не изменяет план: показывает текущие и предлагаемые значения, а также предупреждения о связях."),
+		mcp.WithNumber("task_unique_id", mcp.Required(), mcp.Description("неизменяемый UniqueID задачи")),
+		mcp.WithString("name", mcp.Description("новое название задачи")),
+		mcp.WithString("start", mcp.Description("новая дата начала YYYY-MM-DD")),
+		mcp.WithString("finish", mcp.Description("новая дата окончания YYYY-MM-DD")),
+		mcp.WithString("duration", mcp.Description("новая длительность, например 5d или 16h")),
+	), handleMSProjectPreviewTaskUpdate)
+
+	// skills/ms-project-desktop — единый предварительный просмотр и применение
+	// типизированных изменений задач, расписания, ресурсов и назначений.
+	s.AddTool(mcp.NewTool("ms_project_preview_change",
+		mcp.WithDescription("Предварительно проверяет изменение открытого Microsoft Project. Не записывает план. request — JSON с kind: task|schedule|resource|assignment и operation; результат содержит точный запрос, текущее состояние и предупреждения."),
+		mcp.WithString("request", mcp.Required(), mcp.Description("JSON-запрос изменения; допустимые поля описаны в skill ms-project-desktop")),
+	), handleMSProjectPreviewChange)
+
+	s.AddTool(mcp.NewTool("ms_project_apply_change",
+		mcp.WithDescription("Применяет ранее показанное изменение Microsoft Project. Требует confirmed=true после явного подтверждения пользователем. Перед первой записью в план за сессию создаёт резервную копию, затем пересчитывает расписание и сохраняет результат."),
+		mcp.WithString("request", mcp.Required(), mcp.Description("в точности тот же JSON-запрос, который был показан ms_project_preview_change")),
+		mcp.WithBoolean("confirmed", mcp.Required(), mcp.Description("true только после явного подтверждения пользователем")),
+	), handleMSProjectApplyChange)
 
 	// skills/start-project-sandbox — lifecycle docker/tmux песочницы.
 	s.AddTool(mcp.NewTool("start_project_sandbox",
@@ -168,6 +204,91 @@ func registerTools(s *server.MCPServer) {
 
 func handlePing(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return mcp.NewToolResultText("pong"), nil
+}
+
+func handleMSProjectDesktop(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	action := strings.ToLower(strings.TrimSpace(req.GetString("action", "")))
+	var args []string
+	switch action {
+	case "status":
+		args = []string{"--status"}
+	case "outline":
+		args = []string{"--outline"}
+	case "backup":
+		args = []string{"--backup"}
+	default:
+		return textResult("ОШИБКА: action должен быть status|outline|backup"), nil
+	}
+	return textResult(runCLI(resolveCmd("ms-project", "./skills/ms-project-desktop/cmd/ms-project"), args, "")), nil
+}
+
+func handleMSProjectPreviewTaskUpdate(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	uniqueID := req.GetInt("task_unique_id", 0)
+	if uniqueID < 1 {
+		return textResult("ОШИБКА: task_unique_id должен быть положительным числом"), nil
+	}
+	args := []string{"--preview-task-unique-id", fmt.Sprintf("%d", uniqueID)}
+	for _, field := range []string{"name", "start", "finish", "duration"} {
+		if hasArg(req.GetArguments(), field) {
+			args = append(args, "--"+field, req.GetString(field, ""))
+		}
+	}
+	return textResult(runCLI(resolveCmd("ms-project", "./skills/ms-project-desktop/cmd/ms-project"), args, "")), nil
+}
+
+func handleMSProjectPreviewChange(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	request := req.GetString("request", "")
+	if !json.Valid([]byte(request)) {
+		return textResult("ОШИБКА: request должен быть корректным JSON"), nil
+	}
+	return textResult(runCLI(resolveCmd("ms-project", "./skills/ms-project-desktop/cmd/ms-project"), []string{"--preview-change", request}, "")), nil
+}
+
+func handleMSProjectApplyChange(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	if !req.GetBool("confirmed", false) {
+		return textResult("ОШИБКА: применение требует confirmed=true после явного подтверждения пользователем"), nil
+	}
+	request := req.GetString("request", "")
+	if !json.Valid([]byte(request)) {
+		return textResult("ОШИБКА: request должен быть корректным JSON"), nil
+	}
+
+	planPath, err := activeMSProjectPath()
+	if err != nil {
+		return textResult("ОШИБКА: " + err.Error()), nil
+	}
+
+	msProjectSessionBackups.Lock()
+	defer msProjectSessionBackups.Unlock()
+	if _, exists := msProjectSessionBackups.plans[planPath]; !exists {
+		backupOutput := runCLI(resolveCmd("ms-project", "./skills/ms-project-desktop/cmd/ms-project"), []string{"--backup"}, "")
+		var backup struct {
+			Source string `json:"source"`
+		}
+		if err := json.Unmarshal([]byte(backupOutput), &backup); err != nil {
+			return textResult("ОШИБКА: не удалось создать резервную копию: " + backupOutput), nil
+		}
+		if backup.Source != planPath {
+			return textResult("ОШИБКА: открытый план изменился во время создания резервной копии"), nil
+		}
+		msProjectSessionBackups.plans[planPath] = struct{}{}
+	}
+
+	return textResult(runCLI(resolveCmd("ms-project", "./skills/ms-project-desktop/cmd/ms-project"), []string{"--apply-change", request, "--skip-backup"}, "")), nil
+}
+
+func activeMSProjectPath() (string, error) {
+	output := runCLI(resolveCmd("ms-project", "./skills/ms-project-desktop/cmd/ms-project"), []string{"--status"}, "")
+	var projects []struct {
+		Path string `json:"path"`
+	}
+	if err := json.Unmarshal([]byte(output), &projects); err != nil {
+		return "", fmt.Errorf("не удалось прочитать открытые планы: %s", output)
+	}
+	if len(projects) != 1 || strings.TrimSpace(projects[0].Path) == "" {
+		return "", fmt.Errorf("для изменения должен быть открыт ровно один .mpp")
+	}
+	return projects[0].Path, nil
 }
 
 func handleStartSandbox(_ context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
