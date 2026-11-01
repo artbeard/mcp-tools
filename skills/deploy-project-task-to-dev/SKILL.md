@@ -19,11 +19,9 @@ An explicit user request to deploy the task to dev authorizes the checked merge 
 
 ## Branch direction invariant
 
-- `dev` is a downstream demonstration branch and may only receive task branches or be fast-forwarded/merged from `master` or `main` in a separately authorized workflow.
-- Never use `dev` as the base or source for a task branch, `master`, or `main`.
-- Before integrating task → dev, fetch the configured `master`/`main` base and reject the task branch when its commits outside that base contain any merge commit. Task branches must be linear; a merge commit outside base history is treated as possible `dev` contamination.
-- Never merge, rebase, cherry-pick, push, or open an MR from `dev` into `master`, `main`, or a task branch.
-- Do not auto-clean a contaminated task branch. Stop and require reconstruction from the current remote `master` or `main`.
+- The configured deployment branch must not also be a task base or MR target. If it is, this CLI refuses direct deploy so that GitLab MR remains the integration path.
+- Before integrating task → deployment branch, fetch the configured base and reject the task branch when its commits outside that base contain any merge commit.
+- Do not auto-clean a contaminated task branch. Stop and require reconstruction from the current remote configured base.
 
 ## Conflict contract
 

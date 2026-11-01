@@ -12,10 +12,7 @@ import (
 
 const ManifestName = ".workspace.yaml"
 
-var (
-	AllowedWorkBases = map[string]struct{}{"master": {}, "main": {}}
-	AllowedTypes     = map[string]struct{}{"multi_repo": {}, "monorepo": {}}
-)
+var AllowedTypes = map[string]struct{}{"multi_repo": {}, "monorepo": {}}
 
 // Error - ошибка манифеста / discovery.
 type Error struct{ Msg string }
@@ -46,7 +43,7 @@ type Manifest struct {
 	Aliases               []string           // альтернативные имена для --project
 	Root                  string             // каталог, где лежит .workspace.yaml
 	ManifestPath          string             // полный путь к файлу манифеста
-	ProtectedBaseBranches []string           // git.protected_base_branches (master/main)
+	ProtectedBaseBranches []string           // git.protected_base_branches
 	ProtectedBranches     []string           // git.protected_branches (для list/MR/deploy)
 	Repositories          []Repo             // список реп с abs path
 	SandboxComponents     []SandboxComponent // нормализованные sandbox.components
@@ -98,7 +95,7 @@ type MRRepo struct {
 	Label        string // имя репы в отчёте / JSON
 	Path         string // abs path work tree
 	Remote       string // remote для fetch / push task
-	TargetBranch string // branches.mr_target (master|main) - куда открываем MR
+	TargetBranch string // branches.mr_target - куда открываем MR
 }
 
 // DeployProject - адаптер как Python as_deploy_project.
@@ -111,11 +108,12 @@ type DeployProject struct {
 
 // DeployRepo - repo для merge task → dev + push origin/dev.
 type DeployRepo struct {
-	Label      string // имя репы в отчёте / JSON
-	Path       string // abs path work tree
-	Remote     string // remote для fetch / push
-	BaseBranch string // master|main - для history_guard
-	DevBranch  string // всегда "dev" - куда мёржим и что пушим
+	Label        string // имя репы в отчёте / JSON
+	Path         string // abs path work tree
+	Remote       string // remote для fetch / push
+	BaseBranch   string // база task-ветки для history_guard
+	TargetBranch string // MR target; нельзя совпадать с DevBranch для direct deploy
+	DevBranch    string // всегда "dev" - куда мёржим и что пушим
 }
 
 // Find ищет .workspace.yaml вверх от start.
@@ -248,11 +246,12 @@ func AsDeploy(m *Manifest) DeployProject {
 	repos := make([]DeployRepo, 0, len(m.Repositories))
 	for _, r := range m.Repositories {
 		repos = append(repos, DeployRepo{
-			Label:      r.Label,
-			Path:       r.Path,
-			Remote:     r.Remote,
-			BaseBranch: r.BaseBranch,
-			DevBranch:  r.DevBranch,
+			Label:        r.Label,
+			Path:         r.Path,
+			Remote:       r.Remote,
+			BaseBranch:   r.BaseBranch,
+			TargetBranch: r.TargetBranch,
+			DevBranch:    r.DevBranch,
 		})
 	}
 	return DeployProject{
@@ -410,9 +409,6 @@ func parseManifest(data map[string]any, root, manifestPath string) (*Manifest, e
 				return nil, err
 			}
 		}
-		if _, ok := AllowedWorkBases[base]; !ok {
-			return nil, errf("%s: branches.base только master или main, сейчас %s", repoID, base)
-		}
 		if _, ok := protectedBaseSet[base]; !ok {
 			return nil, errf("%s: branches.base должен быть в git.protected_base_branches", repoID)
 		}
@@ -422,9 +418,6 @@ func parseManifest(data map[string]any, root, manifestPath string) (*Manifest, e
 			if err != nil {
 				return nil, err
 			}
-		}
-		if _, ok := AllowedWorkBases[mrTarget]; !ok {
-			return nil, errf("%s: branches.mr_target только master или main, сейчас %s", repoID, mrTarget)
 		}
 		if _, ok := protectedSet[mrTarget]; !ok {
 			return nil, errf("%s: branches.mr_target должен быть в git.protected_branches", repoID)

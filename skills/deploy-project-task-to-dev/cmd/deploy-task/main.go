@@ -3,11 +3,12 @@
 // Push только через PushDevBranch (refs/heads/dev:refs/heads/dev).
 //
 // Exit codes:
-//   0 - ok (list / check без конфликтов / deploy push ok / quirk local_merge_created)
-//   1 - static preflight / fetch / plan hard-fail
-//   2 - setup (манифест, task id)
-//   3 - mid-deploy fail (merge / race / push)
-//   4 - needs_resolution (ожидаемый resumable outcome)
+//
+//	0 - ok (list / check без конфликтов / deploy push ok / quirk local_merge_created)
+//	1 - static preflight / fetch / plan hard-fail
+//	2 - setup (манифест, task id)
+//	3 - mid-deploy fail (merge / race / push)
+//	4 - needs_resolution (ожидаемый resumable outcome)
 package main
 
 import (
@@ -74,6 +75,15 @@ func run(list bool, checkTask, deployTask, continueTask, project, cwd, manifestP
 	}
 
 	proj := workspace.AsDeploy(m)
+	for _, repository := range proj.Repositories {
+		if repository.BaseBranch == repository.DevBranch || repository.TargetBranch == repository.DevBranch {
+			return emit(map[string]any{
+				"status":      "failed",
+				"errors":      []string{"прямой deploy в ветку, используемую как base или MR target, запрещён; используйте GitLab MR"},
+				"push_target": "origin/" + repository.DevBranch,
+			}, 2)
+		}
+	}
 	taskID := checkTask
 	if deployTask != "" {
 		taskID = deployTask
@@ -431,7 +441,7 @@ func taskHistoryGuard(repository, baseRef, taskRef string) (map[string]any, []st
 	var errors []string
 	mergeBase, _ := gitcmd.Git(repository, 60*time.Second, "merge-base", baseRef, taskRef)
 	if !mergeBase.Ok() || strings.TrimSpace(mergeBase.Stdout) == "" {
-		errors = append(errors, "task-ветка не имеет общей истории с remote master/main base")
+		errors = append(errors, "task-ветка не имеет общей истории с настроенной remote base-веткой")
 		return result, errors
 	}
 	result["branch_point"] = strings.TrimSpace(mergeBase.Stdout)
@@ -453,7 +463,7 @@ func taskHistoryGuard(repository, baseRef, taskRef string) (map[string]any, []st
 	result["unexpected_merge_commits"] = unexpected
 	if len(unexpected) > 0 {
 		errors = append(errors,
-			"в task-ветке есть merge-коммиты вне remote master/main; возможно попадание коммитов из dev, пересобери ветку от текущего base")
+			"в task-ветке есть merge-коммиты вне настроенной remote base-ветки; пересобери ветку от текущего base")
 	}
 	return result, errors
 }

@@ -62,8 +62,8 @@ git:
 	}
 }
 
-// base не master/main - ошибка.
-func TestBadBaseBranch(t *testing.T) {
+// base обязан быть в protected_base_branches.
+func TestBaseBranchMustBeProtected(t *testing.T) {
 	root := t.TempDir()
 	writeManifest(t, root, `
 schema_version: 1
@@ -73,15 +73,17 @@ repositories:
   - id: app
     path: .
     branches:
-      base: develop
+      base: dev
+git:
+  protected_base_branches: [master, main]
 `)
 	if _, err := workspace.Load(root); err == nil {
 		t.Fatal("expected error")
 	}
 }
 
-// mr_target: dev - ошибка; AsMR отдаёт TargetBranch.
-func TestBadMRTargetAndAsMR(t *testing.T) {
+// mr_target обязан быть protected; AsMR отдаёт TargetBranch.
+func TestMRTargetMustBeProtectedAndAsMR(t *testing.T) {
 	root := t.TempDir()
 	writeManifest(t, root, `
 schema_version: 1
@@ -91,11 +93,11 @@ repositories:
   - id: app
     path: .
     branches:
-      base: master
+      base: main
       mr_target: dev
 git:
-  protected_base_branches: [master, main]
-  protected_branches: [master, main, dev]
+  protected_base_branches: [main]
+  protected_branches: [main]
 `)
 	if _, err := workspace.Load(root); err == nil {
 		t.Fatal("expected mr_target error")
@@ -111,11 +113,11 @@ repositories:
     path: app
     remote: origin
     branches:
-      base: master
-      mr_target: main
+      base: dev
+      mr_target: dev
 git:
-  protected_base_branches: [master, main]
-  protected_branches: [master, main, dev]
+  protected_base_branches: [main, dev]
+  protected_branches: [main, dev]
 `)
 	_ = os.MkdirAll(filepath.Join(okRoot, "app"), 0o755)
 	m, err := workspace.Load(okRoot)
@@ -123,7 +125,7 @@ git:
 		t.Fatal(err)
 	}
 	p := workspace.AsMR(m)
-	if p.Key != "ok-mr" || len(p.Repositories) != 1 || p.Repositories[0].TargetBranch != "main" {
+	if p.Key != "ok-mr" || len(p.Repositories) != 1 || p.Repositories[0].TargetBranch != "dev" {
 		t.Fatalf("%#v", p)
 	}
 }

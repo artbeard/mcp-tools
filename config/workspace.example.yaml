@@ -11,14 +11,14 @@ repositories:
     path: backend
     remote: origin
     branches:
-      base: master # prepare: master|main only
+      base: master # must be in git.protected_base_branches
       mr_target: master
       dev: dev
   - id: frontend
     path: frontend
     remote: origin
     branches:
-      base: master
+      base: master # must be in git.protected_base_branches
       mr_target: master
       dev: dev
 

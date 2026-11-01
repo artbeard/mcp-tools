@@ -22,15 +22,15 @@ The CLI reads `GITLAB_TOKEN` and `GITLAB_BASE_URL` only from the repo-root `.env
 
 ## Branch direction invariant
 
-- Allow MR targets only `master` or `main`. Never create an MR from `dev` to `master`, `main`, or a task branch.
-- Reject `dev`, `master`, and `main` as task/source branch names independently of configuration.
-- Before any push, fetch the actual remote target and reject the task branch when its commits outside that target contain any merge commit. This is a hard contamination guard: task branches must be linear and based on `master`/`main`, never on `dev`.
+- Allow an MR target only when it is listed in `git.protected_branches` in `.workspace.yaml`.
+- Reject protected branch names as task/source branch names.
+- Before any push, fetch the configured remote target and reject the task branch when its commits outside that target contain any merge commit.
 - Do not auto-rebase, auto-cherry-pick, or force-push a contaminated task branch. Stop and require reconstruction from the current remote target with explicitly selected task commits.
 
 ## Push boundary
 
 - Push only the exact task refspec `refs/heads/<task>:refs/heads/<task>`.
-- Never push `master`, `main`, `dev`, another base branch, tags, or multiple refspecs.
+- Never push a protected branch, another base branch, tags, or multiple refspecs.
 - Never force-push.
 - Creating MRs is an external write. Treat an explicit user request to create/publish the task MRs as authorization for the complete checked operation.
 

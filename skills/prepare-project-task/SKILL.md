@@ -21,11 +21,9 @@ The prepare command repeats the complete preflight, inspects remote branches, fe
 
 ## Branch direction invariant
 
-- Create task branches only from the latest configured remote `master` or `main`.
-- Never create or update a task branch from `dev`, even when the local checkout is currently on `dev`.
-- Treat `dev` only as a downstream demonstration branch. Never merge, rebase, or cherry-pick `dev` into a task branch, `master`, or `main`.
-- Reject configuration whose `base_branch` is anything other than `master` or `main`; do not rely only on a configurable protected-branch list.
-- Never repair a contaminated task branch in this workflow. Stop and require reconstruction from the current remote `master` or `main` with explicitly selected task commits.
+- Create task branches only from the latest configured remote base branch.
+- The base branch MUST be listed in `git.protected_base_branches` in `.workspace.yaml`.
+- Never repair a contaminated task branch in this workflow. Stop and require reconstruction from the current remote configured base with explicitly selected task commits.
 
 ## Absolute push prohibition
 

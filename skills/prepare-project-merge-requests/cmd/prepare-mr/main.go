@@ -506,13 +506,13 @@ func inspectRepository(item workspace.MRRepo, taskID string, titleOverride *stri
 
 // taskHistoryGuard - защита от контаминации (обычно merge/история с dev).
 // 1) merge-base target..task должен существовать (общая история).
-// 2) rev-list --merges target..task должен быть пуст: линейная ветка от master/main.
+// 2) rev-list --merges target..task должен быть пуст: линейная ветка от configured target.
 func taskHistoryGuard(repository, targetRef, taskRef string) (map[string]any, []string) {
 	result := map[string]any{"target_ref": targetRef, "task_ref": taskRef}
 	var errors []string
 	mergeBase, _ := gitcmd.Git(repository, 60*time.Second, "merge-base", targetRef, taskRef)
 	if !mergeBase.Ok() || strings.TrimSpace(mergeBase.Stdout) == "" {
-		errors = append(errors, "task-ветка не имеет общей истории с remote master/main target")
+		errors = append(errors, "task-ветка не имеет общей истории с настроенной remote target-веткой")
 		return result, errors
 	}
 	result["branch_point"] = strings.TrimSpace(mergeBase.Stdout)
@@ -534,7 +534,7 @@ func taskHistoryGuard(repository, targetRef, taskRef string) (map[string]any, []
 	result["unexpected_merge_commits"] = unexpected
 	if len(unexpected) > 0 {
 		errors = append(errors,
-			"в task-ветке есть merge-коммиты вне remote master/main; возможно попадание коммитов из dev, пересобери ветку от текущего target")
+			"в task-ветке есть merge-коммиты вне настроенной remote target-ветки; пересобери ветку от текущего target")
 	}
 	return result, errors
 }

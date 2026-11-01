@@ -159,7 +159,7 @@ cp config/workspace.example.yaml /path/to/workspace/.workspace.yaml
 - **Параметры:** `mode` = `list|check|prepare`; `task_id`; опционально `project`, `cwd`.
 - **Конфиг:** `.workspace.yaml` (repositories + branches.base)
 - **CLI:** `make build-prepare-task` → `./bin/prepare-task --check IT-123`
-- **Ветки:** база только `master`/`main` (зашито в `AllowedWorkBases`); id задачи не может быть `master`/`main`/`dev`.
+- **Ветки:** база задаётся в `branches.base` и должна входить в `git.protected_base_branches`; id задачи не может совпадать с защищённой веткой.
 
 ### `prepare_project_merge_requests`
 
@@ -181,7 +181,7 @@ cp config/workspace.example.yaml /path/to/workspace/.workspace.yaml
 - **CLI:** `make build-deploy-task` → `./bin/deploy-task --check IT-123`
 - **Ветки:** `branches.dev` обязан быть литералом `dev`; push только `refs/heads/dev:refs/heads/dev` (`PushDevBranch`).
 
-**Имена веток жёстко зашиты в коде** (не только значения по умолчанию в манифесте): `master`/`main` как рабочие базы и цели MR, `dev` как единственная ветка для deploy/push, запрет task-id из `{master,main,dev}`. См. `internal/workspace.AllowedWorkBases`, `internal/gitcmd.ForbiddenTaskBranches`, `PushDevBranch`. Манифест может указать `branches.*`, но значения вне этих литералов отклоняются.
+**Политика веток:** `branches.base` и `branches.mr_target` задаются в манифесте и должны входить соответственно в `git.protected_base_branches` и `git.protected_branches`. Для прямого deploy/push по-прежнему используется только `dev`; если `dev` одновременно является base или MR target, CLI прямой выкладки откажется от операции — интеграция должна пройти через GitLab MR. `master`, `main` и `dev` дополнительно запрещены как имена task-веток.
 
 ### `yandex_tracker_timekeeper`
 
@@ -281,7 +281,6 @@ make build-codestyle
 
 ## TODO
 
-- [ ] Вынести жёстко зашитые имена веток (`master`/`main`/`dev`, ForbiddenTaskBranches, AllowedWorkBases, литерал push `dev`) в конфиг / `.workspace.yaml`, чтобы не править код под другую схему веток
 
 ---
 
