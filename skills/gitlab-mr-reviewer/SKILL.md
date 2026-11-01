@@ -18,6 +18,11 @@ description: Детерминированный ревьюер GitLab merge requ
 1. Разбери каждый входной MR в `project_path` и `merge_request_iid` (или полный MR URL).
 2. Если передан ключ Tracker - только для понимания scope задачи; ничего не записывай в Tracker.
 3. Получи контекст одним вызовом `gitlab_mr_context` (или CLI `bin/gitlab-mr-context`): metadata, changed files/diffs, commits, discussions/notes.
+   Не передавай `env_dir` проверяемого репозитория: по умолчанию инструмент читает `.env` / `.env.local`
+   корня `mcp-tools`, где настроен доступ к GitLab. `env_dir` допустим только для явно выбранного
+   каталога с учётными данными GitLab.
+   API использует `GITLAB_TOKEN` (PAT); `GITLAB_USERNAME` нужен только HTTPS-клонированию и не
+   заменяет PAT для API.
 4. Notes: по умолчанию все; опциональный фильтр авторов через `author_filter` / `GITLAB_MR_AUTHOR_FILTER` (CSV username/name/email/id). Пустой фильтр = все notes.
 5. Вызови `codestyle_find_rules` с коротким описанием по изменённым файлам. Прочитай все релевантные правила с `priority="critical"` через `codestyle_read_rule`.
 6. Оценивай только факты из diff/metadata/discussions, задачи Tracker и загруженных правил.
